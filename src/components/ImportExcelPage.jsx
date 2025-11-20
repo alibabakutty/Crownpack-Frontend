@@ -217,19 +217,25 @@ const ImportExcelPage = () => {
                       {selectedTable === 'main-groups' && (
                         <>
                           <div>
-                            • <strong>Column A:</strong> main_group_code (optional)
+                            • <strong>Column A:</strong> main_group_code (required, unique)
                           </div>
                           <div>
                             • <strong>Column B:</strong> main_group_name (required, unique)
                           </div>
                           <div>
-                            • <strong>Column C:</strong> latpl (optional)
+                            • <strong>Column C:</strong> tally_report (optional)
                           </div>
                           <div>
-                            • <strong>Column D:</strong> report (optional)
+                            • <strong>Column D:</strong> sub_report (optional)
                           </div>
                           <div>
-                            • <strong>Column E:</strong> status (optional, default: Active)
+                            • <strong>Column E:</strong> debit_credit (optional)
+                          </div>
+                          <div>
+                            • <strong>Column F:</strong> trial_balance (optional)
+                          </div>
+                          <div>
+                            • <strong>Column G:</strong> status (optional, default: Active)
                           </div>
                         </>
                       )}
@@ -242,10 +248,19 @@ const ImportExcelPage = () => {
                             • <strong>Column B:</strong> sub_group_name (required, unique)
                           </div>
                           <div>
-                            • <strong>Column C:</strong> report (optional)
+                            • <strong>Column C:</strong> tally_report (optional)
                           </div>
                           <div>
-                            • <strong>Column D:</strong> status (optional, default: Active)
+                            • <strong>Column D:</strong> sub_report (optional)
+                          </div>
+                          <div>
+                            • <strong>Column E:</strong> debit_credit (optional)
+                          </div>
+                          <div>
+                            • <strong>Column F:</strong> trial_balance (optional)
+                          </div>
+                          <div>
+                            • <strong>Column G:</strong> status (optional, default: Active)
                           </div>
                         </>
                       )}
@@ -257,14 +272,20 @@ const ImportExcelPage = () => {
                           <div>
                             • <strong>Column B:</strong> ledger_name (required, unique)
                           </div>
-                          <div>
-                            • <strong>Column C:</strong> report (optional)
+                           <div>
+                            • <strong>Column C:</strong> tally_report (optional)
+                          </div>
+                           <div>
+                            • <strong>Column D:</strong> debit_credit (optional)
+                          </div>
+                           <div>
+                            • <strong>Column E:</strong> trial_balance (optional)
                           </div>
                           <div>
-                            • <strong>Column D:</strong> status (optional, default: Active)
+                            • <strong>Column F:</strong> status (optional, default: Active)
                           </div>
                           <div>
-                            • <strong>Column E:</strong> link_status (optional)
+                            • <strong>Column G:</strong> link_status (optional)
                           </div>
                         </>
                       )}
@@ -293,8 +314,6 @@ const ImportExcelPage = () => {
                       <li>Keep column order exactly as shown above</li>
                       <li>First row should be headers (will be skipped)</li>
                       <li>Unique fields must not have duplicates</li>
-                      <li>Use downloaded template for correct format</li>
-                      <li>Empty rows will be skipped automatically</li>
                     </ul>
                   </div>
                 </div>

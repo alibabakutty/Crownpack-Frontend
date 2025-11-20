@@ -268,63 +268,79 @@ const ViewFetchMaster = () => {
       switch (type) {
         case 'main-group':
           return (
-            <div className="grid grid-cols-4 items-center">
-              <p className="text-xs text-gray-800 font-medium">{item.main_group_code}</p>
-              <p className="text-xs text-gray-800 font-medium -ml-8">{item.main_group_name}</p>
-              <p className="text-xs text-gray-600 text-right -mr-10">
-                <span>{item.report}</span>
+            <div className="grid grid-cols-7 items-center leading-4">
+              <p className="text-xs text-gray-800 font-medium text-[13px]">{item.main_group_code}</p>
+              <p className="text-xs text-gray-800 font-medium -ml-11">{item.main_group_name}</p>
+              <p className="text-xs text-gray-600 ml-20 w-32">
+                <span>{item.tally_report}</span>
+              </p>
+              <p className="text-xs text-gray-600 ml-20 w-32">
+                <span>{item.sub_report}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-10 ml-28">
+                <span>{item.debit_credit}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-30 ml-[85px]">
+                <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <span
-                  className={`text-xs px-2 justify-self-end`}
-                >
-                  {item.status}
-                </span>
+                <p className='w-16 ml-[73px]'>
+                  <span className={`text-xs px-2`}>{item.status}</span>
+                </p>
               )}
             </div>
           );
 
         case 'sub-group':
           return (
-            <div className="grid grid-cols-4 items-center">
+            <div className="grid grid-cols-7 items-center">
               <p className="text-xs text-gray-800 font-medium">{item.sub_group_code}</p>
-              <p className="text-xs text-gray-800 font-medium -ml-8">{item.sub_group_name}</p>
-              <p className="text-xs text-gray-600 text-right -mr-10">
-                <span>{item.report}</span>
+              <p className="text-xs text-gray-800 font-medium -ml-11">{item.sub_group_name}</p>
+              <p className="text-xs text-gray-600 ml-20 w-32">
+                <span>{item.tally_report}</span>
+              </p>
+              <p className="text-xs text-gray-600 ml-20 w-32">
+                <span>{item.sub_report}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-10 ml-28">
+                <span>{item.debit_credit}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-30 ml-[85px]">
+                <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <span
-                  className={`text-xs px-2 justify-self-end`}
-                >
-                  {item.status}
-                </span>
+                <p className='w-16 ml-[73px]'>
+                  <span className={`text-xs px-2`}>{item.status}</span>
+                </p>
               )}
             </div>
           );
 
         case 'ledger':
           return (
-            <div className="grid grid-cols-5 items-center">
+            <div className="grid grid-cols-7 items-center">
               <p className="text-xs text-gray-800 font-medium">{item.ledger_code}</p>
-              <p className="text-xs text-gray-600 -ml-[68px]">{item.ledger_name}</p>
-              <p className="text-xs text-gray-600 text-right -mr-14">
-                <span>{item.report}</span>
+              <p className="text-xs text-gray-600 -ml-[76px] w-68">{item.ledger_name}</p>
+              <p className="text-xs text-gray-600 w-32 ml-28">
+                <span>{item.tally_report}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-16 ml-32">
+                <span>{item.debit_credit}</span>
+              </p>
+              <p className="text-xs text-gray-600 w-20 ml-32">
+                <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <span
-                  className={`text-xs px-2 ml-[98px]`}
-                >
-                  {item.status}
-                </span>
+                <p className='w-30 ml-[85px]'>
+                  <span className={`text-xs px-2 ml-10`}>{item.status}</span>
+                </p>
               )}
 
               {/* Add link_status here for ledger only */}
               {item.link_status && (
-                <span
-                  className={`text-xs px-2 justify-self-end`}
-                >
-                  {item.link_status}
-                </span>
+                <p className='w-16 ml-[73px]'>
+                  <span className={`text-xs px-2`}>{item.link_status}</span>
+                </p>
               )}
             </div>
           );
@@ -338,11 +354,7 @@ const ViewFetchMaster = () => {
                 <span>{item.report}</span>
               </p>
               {item.status && (
-                <span
-                  className={`text-xs px-2 rounded justify-self-end`}
-                >
-                  {item.status}
-                </span>
+                <span className={`text-xs px-2 rounded justify-self-end`}>{item.status}</span>
               )}
             </div>
           );
@@ -419,7 +431,7 @@ const ViewFetchMaster = () => {
   return (
     <div className="flex font-amasis">
       <div className="w-full h-screen flex">
-        <div className="w-1/2 bg-linear-to-t to-cyan-400 from-[#ccc]">
+        <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg backdrop-blur-sm"
@@ -435,8 +447,8 @@ const ViewFetchMaster = () => {
             <span className="text-sm font-medium">Back</span>
           </button>
         </div>
-        <div className="w-1/2 bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
-          <div className="w-[680px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
+        <div className="w-[70%] bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
+          <div className="w-[955px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
             <p className="text-[13px] font-medium underline underline-offset-4 decoration-gray-400 text-gray-700">
               {formatType(type)} Display
             </p>
@@ -446,19 +458,30 @@ const ViewFetchMaster = () => {
               value={searchTerm}
               ref={searchInputRef}
               onChange={handleSearchChange}
-              className="w-[450px] ml-2 mt-2 h-5 capitalize font-medium pl-1 text-sm focus:bg-yellow-200 focus:border focus:border-blue-500 focus:outline-0 relative z-10"
+              className="w-[550px] ml-2 mt-2 h-5 capitalize font-medium pl-1 text-sm focus:bg-yellow-200 focus:border focus:border-blue-500 focus:outline-0 relative z-10"
               autoComplete="off"
             />
           </div>
-          <div className="w-[680px] h-[89vh] border border-gray-600 bg-amber-50">
-            <h2 className="px-1 py-0.3 bg-green-800 text-white text-right text-[13px] pl-3">
+          <div className="w-[955px] h-[89vh] border border-gray-600 bg-amber-50">
+            <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[13px] pl-3">
               List of {typeNames[type] || 'Items'}
             </h2>
             <div className="border border-b-slate-400 flex justify-between px-1 py-0.3 text-[16px]">
               <div>Code</div>
-              <div className={` ${type === 'ledger' ? '-ml-60' : '-ml-44'}`}>Name</div> 
-              <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Report</div>
-              <div className={`${type === 'ledger' ? '-mr-60' : 'mr-0'}`}>Status</div>
+              <div className={` ${type === 'ledger' ? '-ml-60' : '-ml-44'}`}>Name</div>
+              {type !== 'division' && (
+                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Tally Report</div>
+              )}
+              {type !== 'ledger' && (
+                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Sub Report</div>
+              )}
+              {type !== 'division' && (
+                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Debit/Credit</div>
+              )}
+              {type !== 'division' && (
+                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Trial Balance</div>
+              )}
+              <div className={`${type === 'ledger' ? '-mr-60' : 'mr-6'}`}>Status</div>
               {type === 'ledger' && <div>Link Status</div>}
             </div>
             {renderContent()}
