@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Select from 'react-select';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const LedgerConsolidatePage = () => {
   const [ledgerOptions, setLedgerOptions] = useState([]);
@@ -12,29 +14,32 @@ const LedgerConsolidatePage = () => {
   const [selectedMainGroup, setSelectedMainGroup] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState({ value: 'inactive', label: 'Inactive' });
   const [serialNumber, setSerialNumber] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const ledgerSelectRef = useRef(null);
   const subGroupSelectRef = useRef(null);
   const mainGroupSelectRef = useRef(null);
   const statusSelectRef = useRef(null);
   const navigate = useNavigate();
 
-  //Auto increment for serial number field
+  // Fetch the next serial number from backend
   useEffect(() => {
-    setSerialNumber(1);
-  }, [])
-
-  const handleSerialNumberChange = (e) => {
-    const value = parseInt(e.target.value) || 1;
-    setSerialNumber(value);
-  }
-
-  const incrementSerialNumber = () => {
-    setSerialNumber(prev => prev + 1);
-  };
-
-  const resetSerialNumber = () => {
-    setSerialNumber(1);
-  }
+    const fetchNextSerialNumber = async () => {
+      try {
+        const response = await api.get('/connect_consolidates');
+        if (Array.isArray(response.data)) {
+          const maxSerialNo = response.data.reduce((max, item) => 
+            Math.max(max, item.serial_no || 0), 0
+          );
+          setSerialNumber(maxSerialNo + 1);
+        }
+      } catch (error) {
+        console.error('Error fetching serial number:', error);
+        setSerialNumber(1);
+      }
+    };
+    fetchNextSerialNumber();
+  }, []);
 
   // Status options
   const statusOptions = [
@@ -46,22 +51,20 @@ const LedgerConsolidatePage = () => {
     const fetchLedgers = async () => {
       try {
         const response = await api.get('/ledgers');
-        
         if (Array.isArray(response.data)) {
           const formattedLedgers = response.data.map(ledger => ({
-            value: ledger.ledger_code, // This will be used as value
-            label: `${ledger.ledger_code} - ${ledger.ledger_name}`, // Display both code and name in dropdown
+            value: ledger.ledger_code,
+            label: `${ledger.ledger_code} - ${ledger.ledger_name}`,
             ledger_code: ledger.ledger_code,
             ledger_name: ledger.ledger_name,
             ...ledger
           }));
           setLedgerOptions(formattedLedgers);
         }
-        console.log('Fetched ledgers:', response.data);
       } catch (error) {
         console.error('Error fetching ledgers:', error);
       }
-    }
+    };
     fetchLedgers();
   }, []);
 
@@ -69,7 +72,6 @@ const LedgerConsolidatePage = () => {
     const fetchSubGroups = async () => {
       try {
         const response = await api.get('/sub_groups');
-
         if (Array.isArray(response.data)) {
           const formattedSubGroups = response.data.map(subgroup => ({
             value: subgroup.sub_group_code,
@@ -77,14 +79,13 @@ const LedgerConsolidatePage = () => {
             sub_group_code: subgroup.sub_group_code,
             sub_group_name: subgroup.sub_group_name,
             ...subgroup,
-          }))
+          }));
           setSubGroupOptions(formattedSubGroups);
-          console.log('Fetched Sub Groups:', response.data);
         }
       } catch (error) {
         console.error('Error fetching sub groups:', error);
       }
-    }
+    };
     fetchSubGroups();
   }, []);
 
@@ -92,7 +93,6 @@ const LedgerConsolidatePage = () => {
     const fetchMainGroups = async () => {
       try {
         const response = await api.get('/main_groups');
-
         if (Array.isArray(response.data)) {
           const formattedMainGroups = response.data.map(mainGroup => ({
             value: mainGroup.main_group_code,
@@ -100,16 +100,15 @@ const LedgerConsolidatePage = () => {
             main_group_code: mainGroup.main_group_code,
             main_group_name: mainGroup.main_group_name,
             ...mainGroup
-          }))
+          }));
           setMainGroupOptions(formattedMainGroups);
-          console.log('Fetched main groups:', response.data);
         }
       } catch (error) {
         console.error("Error fetching main groups:", error);
       }
-    }
+    };
     fetchMainGroups();
-  }, [])
+  }, []);
 
   // Keyboard navigation handler
   useEffect(() => {
@@ -154,7 +153,98 @@ const LedgerConsolidatePage = () => {
     navigate(-1);
   };
 
-  // Custom styles for react-select with increased width and hidden dropdown arrow
+  // Submit consolidation data to backend
+  const handleSubmit = async () => {
+    // Validation
+    if (!selectedLedger) {
+      toast.error('Please select a ledger', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    if (!selectedSubGroup && !selectedMainGroup) {
+      toast.error('Please select either a Sub Group or Main Group', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    // Simple confirmation dialog
+    const isConfirmed = window.confirm('Do you wish to submit this consolidation record?');
+    
+    if (!isConfirmed) {
+      toast.info('Submission cancelled', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const consolidationData = {
+        serial_no: serialNumber,
+        ledger_code: selectedLedger.ledger_code,
+        sub_group_code: selectedSubGroup ? selectedSubGroup.sub_group_code : null,
+        main_group_code: selectedMainGroup ? selectedMainGroup.main_group_code : null,
+        status: selectedStatus.value
+      };
+
+      console.log('Submitting consolidation data:', consolidationData);
+
+      const response = await api.post('/consolidated', consolidationData);
+      
+      if (response.data) {
+        toast.success('Consolidation created successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Reset form
+        setSelectedLedger(null);
+        setSelectedSubGroup(null);
+        setSelectedMainGroup(null);
+        setSelectedStatus({ value: 'inactive', label: 'InActive' });
+        
+        // Increment serial number for next entry
+        // setSerialNumber(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error creating consolidation record:', error);
+      toast.error(`❌ Error creating consolidation record: ${error.response?.data?.error || error.message}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Custom styles for react-select
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -165,7 +255,7 @@ const LedgerConsolidatePage = () => {
       fontSize: '12px',
       fontFamily: 'inherit',
       cursor: 'text',
-      minWidth: '120px', // Increased minimum width for code fields
+      minWidth: '120px',
     }),
     valueContainer: (provided) => ({
       ...provided,
@@ -182,7 +272,7 @@ const LedgerConsolidatePage = () => {
       fontWeight: '500',
     }),
     dropdownIndicator: () => ({
-      display: 'none', // Hide dropdown arrow
+      display: 'none',
     }),
     indicatorSeparator: () => ({
       display: 'none',
@@ -191,12 +281,12 @@ const LedgerConsolidatePage = () => {
       ...provided,
       fontSize: '12px',
       zIndex: 20,
-      minWidth: '200px', // Increased width for dropdown menu
+      minWidth: '200px',
       width: 'auto',
     }),
     menuList: (provided) => ({
       ...provided,
-      minWidth: '200px', // Ensure menu list has sufficient width
+      minWidth: '200px',
     }),
     option: (provided, state) => ({
       ...provided,
@@ -204,13 +294,13 @@ const LedgerConsolidatePage = () => {
       color: state.isFocused ? 'white' : 'black',
       fontSize: '12px',
       padding: '4px 8px',
-      whiteSpace: 'nowrap', // Prevent text wrapping
+      whiteSpace: 'nowrap',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
     }),
   };
 
-  // Custom styles for status dropdown (smaller width)
+  // Custom styles for status dropdown
   const statusStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -221,7 +311,7 @@ const LedgerConsolidatePage = () => {
       fontSize: '12px',
       fontFamily: 'inherit',
       cursor: 'text',
-      minWidth: '70px', // Reduced width for status
+      minWidth: '70px',
       width: '70px',
     }),
     valueContainer: (provided) => ({
@@ -248,7 +338,7 @@ const LedgerConsolidatePage = () => {
       ...provided,
       fontSize: '12px',
       zIndex: 20,
-      minWidth: '70px', // Reduced menu width for status
+      minWidth: '70px',
       width: '70px',
     }),
     menuList: (provided) => ({
@@ -267,17 +357,14 @@ const LedgerConsolidatePage = () => {
 
   // Custom component to display only the code in the select field
   const formatOptionLabel = (option, { context }) => {
-    // For the dropdown menu, show both code and name
     if (option.__isNew__) {
       return option.label;
     }
     
-    // When in the value container (selected state), show only the code
     if (context === 'value') {
       return option.value;
     }
     
-    // When in the menu (dropdown options), show both code and name
     return (
       <div className="whitespace-nowrap">
         <span className="font-medium">{option.value}</span>
@@ -288,6 +375,20 @@ const LedgerConsolidatePage = () => {
 
   return (
     <div className="flex font-amasis">
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       <div className="w-full h-screen border border-gray-600 bg-amber-50">
         <div className="">
           <div className="absolute">
@@ -321,7 +422,7 @@ const LedgerConsolidatePage = () => {
               <th className='text-left pl-1'>Sub Group Name</th>
               <th className='text-left pl-1'>Main Group Code</th>
               <th className='text-left pl-1'>Main Group Name</th>
-              <th className='text-left pl-1'>Status</th>
+              <th className='text-left pl-1'>Link-Status</th>
             </tr>
           </thead>
           <tbody>
@@ -330,14 +431,13 @@ const LedgerConsolidatePage = () => {
                 <input
                   type="text"
                   value={serialNumber}
-                  onChange={handleSerialNumberChange}
-                  className="w-10 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+                  className="w-10 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-center bg-gray-100"
                   autoComplete="off"
                   readOnly
                 />
               </td>
               
-              {/* Ledger Code - Shows only ledger_code */}
+              {/* Ledger Code */}
               <td>
                 <Select 
                   ref={ledgerSelectRef}
@@ -353,7 +453,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Ledger Name (Readonly - auto-populated) */}
+              {/* Ledger Name */}
               <td>
                 <input
                   type="text"
@@ -365,7 +465,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Sub Group Code - Shows only sub_group_code */}
+              {/* Sub Group Code */}
               <td>
                 <Select 
                   ref={subGroupSelectRef}
@@ -381,7 +481,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Sub Group Name (Readonly - auto-populated) */}
+              {/* Sub Group Name */}
               <td>
                 <input
                   type="text"
@@ -393,7 +493,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Main Group Code - Shows only main_group_code */}
+              {/* Main Group Code */}
               <td>
                 <Select 
                   ref={mainGroupSelectRef}
@@ -409,7 +509,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Main Group Name (Readonly - auto-populated) */}
+              {/* Main Group Name */}
               <td>
                 <input
                   type="text"
@@ -421,7 +521,7 @@ const LedgerConsolidatePage = () => {
                 />
               </td>
               
-              {/* Status Dropdown - Compact version */}
+              {/* Status */}
               <td>
                 <Select 
                   ref={statusSelectRef}
@@ -431,7 +531,7 @@ const LedgerConsolidatePage = () => {
                   styles={statusStyles} 
                   placeholder="Status" 
                   isSearchable={false}
-                  className='w-20 text-[12px]' // Reduced width class
+                  className='w-20 text-[12px]'
                 />
               </td>
             </tr>
@@ -439,8 +539,17 @@ const LedgerConsolidatePage = () => {
         </table>
 
         <div className='mt-[81vh] ml-[93vw]'>
-          <button type='submit' className='px-2 py-1 bg-yellow-300 rounded cursor-pointer'>
-            Submit
+          <button 
+            type='button' 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className={`px-2 py-1 rounded cursor-pointer ${
+              isSubmitting 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-yellow-300 hover:bg-yellow-400'
+            }`}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
       </div>
