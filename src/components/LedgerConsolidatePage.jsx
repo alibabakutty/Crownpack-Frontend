@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react'; 
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Select from 'react-select';
@@ -9,37 +9,17 @@ const LedgerConsolidatePage = () => {
   const [ledgerOptions, setLedgerOptions] = useState([]);
   const [subGroupOptions, setSubGroupOptions] = useState([]);
   const [mainGroupOptions, setMainGroupOptions] = useState([]);
-  const [selectedLedger, setSelectedLedger] = useState(null);
-  const [selectedSubGroup, setSelectedSubGroup] = useState(null);
-  const [selectedMainGroup, setSelectedMainGroup] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState({ value: 'inactive', label: 'Inactive' });
-  const [serialNumber, setSerialNumber] = useState(1);
+  const [rows, setRows] = useState([{ 
+    id: 1, 
+    selectedLedger: null,
+    selectedSubGroup: null,
+    selectedMainGroup: null,
+    selectedStatus: { value: 'inactive', label: 'Inactive' }
+  }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nextRowId, setNextRowId] = useState(2);
   
-  const ledgerSelectRef = useRef(null);
-  const subGroupSelectRef = useRef(null);
-  const mainGroupSelectRef = useRef(null);
-  const statusSelectRef = useRef(null);
   const navigate = useNavigate();
-
-  // Fetch the next serial number from backend
-  useEffect(() => {
-    const fetchNextSerialNumber = async () => {
-      try {
-        const response = await api.get('/connect_consolidates');
-        if (Array.isArray(response.data)) {
-          const maxSerialNo = response.data.reduce((max, item) => 
-            Math.max(max, item.serial_no || 0), 0
-          );
-          setSerialNumber(maxSerialNo + 1);
-        }
-      } catch (error) {
-        console.error('Error fetching serial number:', error);
-        setSerialNumber(1);
-      }
-    };
-    fetchNextSerialNumber();
-  }, []);
 
   // Status options
   const statusOptions = [
@@ -129,59 +109,126 @@ const LedgerConsolidatePage = () => {
     };
   }, [navigate]);
 
-  const handleLedgerChange = (selectedLedgerOption) => {
-    setSelectedLedger(selectedLedgerOption);
-    console.log('Selected Ledger:', selectedLedgerOption);
+  // Handle status change - add new row when status changes to active
+  const handleStatusChange = (selectedStatusOption, rowId) => {
+    setRows(prevRows => 
+      prevRows.map(row => 
+        row.id === rowId 
+          ? { ...row, selectedStatus: selectedStatusOption }
+          : row
+      )
+    );
+
+    // If status is changed to active, add a new empty row
+    if (selectedStatusOption.value === 'active') {
+      addNewRow();
+    }
   };
 
-  const handleSubGroupChange = (selectedSubGroupOption) => {
-    setSelectedSubGroup(selectedSubGroupOption);
-    console.log('Selected Sub Group:', selectedSubGroupOption);
+  const handleLedgerChange = (selectedLedgerOption, rowId) => {
+    setRows(prevRows => 
+      prevRows.map(row => 
+        row.id === rowId 
+          ? { ...row, selectedLedger: selectedLedgerOption }
+          : row
+      )
+    );
   };
 
-  const handleMainGroupChange = (selectedMainGroupOption) => {
-    setSelectedMainGroup(selectedMainGroupOption);
-    console.log('Selected Main Group:', selectedMainGroupOption);
+  const handleSubGroupChange = (selectedSubGroupOption, rowId) => {
+    setRows(prevRows => 
+      prevRows.map(row => 
+        row.id === rowId 
+          ? { ...row, selectedSubGroup: selectedSubGroupOption }
+          : row
+      )
+    );
   };
 
-  const handleStatusChange = (selectedStatusOption) => {
-    setSelectedStatus(selectedStatusOption);
-    console.log('Selected Status:', selectedStatusOption);
+  const handleMainGroupChange = (selectedMainGroupOption, rowId) => {
+    setRows(prevRows => 
+      prevRows.map(row => 
+        row.id === rowId 
+          ? { ...row, selectedMainGroup: selectedMainGroupOption }
+          : row
+      )
+    );
+  };
+
+  // Add new row function with empty values
+  const addNewRow = () => {
+    const newRowId = nextRowId;
+    setRows(prevRows => [...prevRows, { 
+      id: newRowId,
+      selectedLedger: null,
+      selectedSubGroup: null,
+      selectedMainGroup: null,
+      selectedStatus: { value: 'inactive', label: 'Inactive' }
+    }]);
+    setNextRowId(prevId => prevId + 1);
   };
 
   const handleBack = () => {
     navigate(-1);
   };
 
+  // Function to merge ledger with groups
+  const mergeLedgerWithGroups = async (ledgerCode, subGroupCode, mainGroupCode) => {
+    try {
+      const response = await api.post('/consolidated/merge', {
+        ledger_code: ledgerCode,
+        sub_group_code: subGroupCode,
+        main_group_code: mainGroupCode
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Function to demerge ledger
+  const demergeLedger = async (ledgerCode) => {
+    try {
+      const response = await api.post(`/consolidated/demerge/${ledgerCode}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // Submit consolidation data to backend
   const handleSubmit = async () => {
-    // Validation
-    if (!selectedLedger) {
-      toast.error('Please select a ledger', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      return;
-    }
+    // Validate all rows
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      
+      if (!row.selectedLedger) {
+        toast.error(`Row ${i + 1}: Please select a ledger`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return;
+      }
 
-    if (!selectedSubGroup && !selectedMainGroup) {
-      toast.error('Please select either a Sub Group or Main Group', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      return;
+      if (!row.selectedSubGroup && !row.selectedMainGroup) {
+        toast.error(`Row ${i + 1}: Please select either a Sub Group or Main Group`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return;
+      }
     }
 
     // Simple confirmation dialog
-    const isConfirmed = window.confirm('Do you wish to submit this consolidation record?');
+    const isConfirmed = window.confirm(`Do you wish to submit ${rows.length} consolidation record(s)?`);
     
     if (!isConfirmed) {
       toast.info('Submission cancelled', {
@@ -198,40 +245,59 @@ const LedgerConsolidatePage = () => {
     setIsSubmitting(true);
 
     try {
-      const consolidationData = {
-        serial_no: serialNumber,
-        ledger_code: selectedLedger.ledger_code,
-        sub_group_code: selectedSubGroup ? selectedSubGroup.sub_group_code : null,
-        main_group_code: selectedMainGroup ? selectedMainGroup.main_group_code : null,
-        status: selectedStatus.value
-      };
+      // Submit all rows
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const consolidationData = {
+          serial_no: i + 1, // Always 1, 2, 3, etc.
+          ledger_code: row.selectedLedger.ledger_code,
+          sub_group_code: row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
+          main_group_code: row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null,
+          status: row.selectedStatus.value
+        };
 
-      console.log('Submitting consolidation data:', consolidationData);
+        console.log('Submitting consolidation data for row:', i + 1, consolidationData);
 
-      const response = await api.post('/consolidated', consolidationData);
-      
-      if (response.data) {
-        toast.success('Consolidation created successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        // Create the consolidation record
+        const response = await api.post('/consolidated', consolidationData);
         
-        // Reset form
-        setSelectedLedger(null);
-        setSelectedSubGroup(null);
-        setSelectedMainGroup(null);
-        setSelectedStatus({ value: 'inactive', label: 'InActive' });
-        
-        // Increment serial number for next entry
-        // setSerialNumber(prev => prev + 1);
+        if (response.data) {
+          // If status is active, merge the ledger with groups
+          if (row.selectedStatus.value === 'active') {
+            await mergeLedgerWithGroups(
+              row.selectedLedger.ledger_code,
+              row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
+              row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null
+            );
+          } else {
+            // If status is inactive, demerge the ledger
+            await demergeLedger(row.selectedLedger.ledger_code);
+          }
+        }
       }
+      
+      toast.success(`${rows.length} consolidation record(s) created successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Reset form
+      setRows([{ 
+        id: 1, 
+        selectedLedger: null,
+        selectedSubGroup: null,
+        selectedMainGroup: null,
+        selectedStatus: { value: 'inactive', label: 'Inactive' }
+      }]);
+      setNextRowId(2);
+      
     } catch (error) {
       console.error('Error creating consolidation record:', error);
-      toast.error(`❌ Error creating consolidation record: ${error.response?.data?.error || error.message}`, {
+      toast.error(`❌ Error: ${error.response?.data?.error || error.message}`, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -412,138 +478,139 @@ const LedgerConsolidatePage = () => {
           </h2>
         </div>
 
-        <table className="w-full border border-slate-400">
-          <thead>
-            <tr className='text-[15px] border-t border-b bg-violet-200'>
-              <th>S.No</th>
-              <th className='text-left pl-1'>Ledger Code</th>
-              <th className='text-left pl-1'>Ledger Name</th>
-              <th className='text-left pl-1'>Sub Group Code</th>
-              <th className='text-left pl-1'>Sub Group Name</th>
-              <th className='text-left pl-1'>Main Group Code</th>
-              <th className='text-left pl-1'>Main Group Name</th>
-              <th className='text-left pl-1'>Link-Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <input
-                  type="text"
-                  value={serialNumber}
-                  className="w-10 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-center bg-gray-100"
-                  autoComplete="off"
-                  readOnly
-                />
-              </td>
-              
-              {/* Ledger Code */}
-              <td>
-                <Select 
-                  ref={ledgerSelectRef}
-                  options={ledgerOptions} 
-                  value={selectedLedger} 
-                  onChange={handleLedgerChange} 
-                  styles={customStyles} 
-                  placeholder="Select Code" 
-                  isSearchable 
-                  className='w-32 text-[12px]'
-                  formatOptionLabel={formatOptionLabel}
-                  getOptionValue={(option) => option.value}
-                />
-              </td>
-              
-              {/* Ledger Name */}
-              <td>
-                <input
-                  type="text"
-                  className="w-60 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent -mr-6"
-                  autoComplete="off"
-                  readOnly
-                  value={selectedLedger ? selectedLedger.ledger_name : ''}
-                  placeholder={selectedLedger ? '' : 'Ledger Name'}
-                />
-              </td>
-              
-              {/* Sub Group Code */}
-              <td>
-                <Select 
-                  ref={subGroupSelectRef}
-                  options={subGroupOptions} 
-                  value={selectedSubGroup} 
-                  onChange={handleSubGroupChange} 
-                  styles={customStyles} 
-                  placeholder="Select Code" 
-                  isSearchable 
-                  className='w-32 text-[12px]'
-                  formatOptionLabel={formatOptionLabel}
-                  getOptionValue={(option) => option.value}
-                />
-              </td>
-              
-              {/* Sub Group Name */}
-              <td>
-                <input
-                  type="text"
-                  className="w-40 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                  autoComplete="off"
-                  readOnly
-                  value={selectedSubGroup ? selectedSubGroup.sub_group_name : ''}
-                  placeholder={selectedSubGroup ? '' : 'Sub Group Name'}
-                />
-              </td>
-              
-              {/* Main Group Code */}
-              <td>
-                <Select 
-                  ref={mainGroupSelectRef}
-                  options={mainGroupOptions} 
-                  value={selectedMainGroup} 
-                  onChange={handleMainGroupChange} 
-                  styles={customStyles} 
-                  placeholder="Select Code" 
-                  isSearchable 
-                  className='w-32 text-[12px]'
-                  formatOptionLabel={formatOptionLabel}
-                  getOptionValue={(option) => option.value}
-                />
-              </td>
-              
-              {/* Main Group Name */}
-              <td>
-                <input
-                  type="text"
-                  className="w-40 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                  autoComplete="off"
-                  readOnly
-                  value={selectedMainGroup ? selectedMainGroup.main_group_name : ''}
-                  placeholder={selectedMainGroup ? '' : 'Main Group Name'}
-                />
-              </td>
-              
-              {/* Status */}
-              <td>
-                <Select 
-                  ref={statusSelectRef}
-                  options={statusOptions} 
-                  value={selectedStatus} 
-                  onChange={handleStatusChange} 
-                  styles={statusStyles} 
-                  placeholder="Status" 
-                  isSearchable={false}
-                  className='w-20 text-[12px]'
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="h-[calc(100vh-120px)] overflow-auto">
+          <table className="w-full border border-slate-400">
+            <thead>
+              <tr className='text-[15px] border-t border-b bg-violet-200'>
+                <th>S.No</th>
+                <th className='text-left pl-1'>Ledger Code</th>
+                <th className='text-left pl-1'>Ledger Name</th>
+                <th className='text-left pl-1'>Sub Group Code</th>
+                <th className='text-left pl-1'>Sub Group Name</th>
+                <th className='text-left pl-1'>Main Group Code</th>
+                <th className='text-left pl-1'>Main Group Name</th>
+                <th className='text-left pl-1'>Link-Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => (
+                <tr key={row.id}>
+                  <td>
+                    <input
+                      type="text"
+                      value={index + 1}
+                      className="w-10 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-center bg-gray-100"
+                      autoComplete="off"
+                      readOnly
+                    />
+                  </td>
+                  
+                  {/* Ledger Code */}
+                  <td>
+                    <Select 
+                      options={ledgerOptions} 
+                      value={row.selectedLedger} 
+                      onChange={(option) => handleLedgerChange(option, row.id)} 
+                      styles={customStyles} 
+                      placeholder="Select Code" 
+                      isSearchable 
+                      className='w-32 text-[12px]'
+                      formatOptionLabel={formatOptionLabel}
+                      getOptionValue={(option) => option.value}
+                    />
+                  </td>
+                  
+                  {/* Ledger Name */}
+                  <td>
+                    <input
+                      type="text"
+                      className="w-60 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent -mr-6"
+                      autoComplete="off"
+                      readOnly
+                      value={row.selectedLedger ? row.selectedLedger.ledger_name : ''}
+                      placeholder={row.selectedLedger ? '' : 'Ledger Name'}
+                    />
+                  </td>
+                  
+                  {/* Sub Group Code */}
+                  <td>
+                    <Select 
+                      options={subGroupOptions} 
+                      value={row.selectedSubGroup} 
+                      onChange={(option) => handleSubGroupChange(option, row.id)} 
+                      styles={customStyles} 
+                      placeholder="Select Code" 
+                      isSearchable 
+                      className='w-32 text-[12px]'
+                      formatOptionLabel={formatOptionLabel}
+                      getOptionValue={(option) => option.value}
+                    />
+                  </td>
+                  
+                  {/* Sub Group Name */}
+                  <td>
+                    <input
+                      type="text"
+                      className="w-40 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+                      autoComplete="off"
+                      readOnly
+                      value={row.selectedSubGroup ? row.selectedSubGroup.sub_group_name : ''}
+                      placeholder={row.selectedSubGroup ? '' : 'Sub Group Name'}
+                    />
+                  </td>
+                  
+                  {/* Main Group Code */}
+                  <td>
+                    <Select 
+                      options={mainGroupOptions} 
+                      value={row.selectedMainGroup} 
+                      onChange={(option) => handleMainGroupChange(option, row.id)} 
+                      styles={customStyles} 
+                      placeholder="Select Code" 
+                      isSearchable 
+                      className='w-32 text-[12px]'
+                      formatOptionLabel={formatOptionLabel}
+                      getOptionValue={(option) => option.value}
+                    />
+                  </td>
+                  
+                  {/* Main Group Name */}
+                  <td>
+                    <input
+                      type="text"
+                      className="w-40 pl-0.5 font-medium capitalize text-[12px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+                      autoComplete="off"
+                      readOnly
+                      value={row.selectedMainGroup ? row.selectedMainGroup.main_group_name : ''}
+                      placeholder={row.selectedMainGroup ? '' : 'Main Group Name'}
+                    />
+                  </td>
+                  
+                  {/* Status */}
+                  <td>
+                    <Select 
+                      options={statusOptions} 
+                      value={row.selectedStatus} 
+                      onChange={(option) => handleStatusChange(option, row.id)} 
+                      styles={statusStyles} 
+                      placeholder="Status" 
+                      isSearchable={false}
+                      className='w-20 text-[12px]'
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        <div className='mt-[81vh] ml-[93vw]'>
+        {/* Static Submit Button */}
+        <div className='absolute bottom-4 right-4'>
           <button 
             type='button' 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className={`px-2 py-1 rounded cursor-pointer ${
+            className={`px-4 py-2 rounded cursor-pointer ${
               isSubmitting 
                 ? 'bg-gray-400 cursor-not-allowed' 
                 : 'bg-yellow-300 hover:bg-yellow-400'

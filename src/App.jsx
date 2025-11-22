@@ -4,6 +4,7 @@ import MainPage from './components/MainPage'
 import ViewFetchMaster from './components/ViewFetchMaster'
 import ImportExcelPage from './components/ImportExcelPage'
 import LedgerConsolidatePage from './components/LedgerConsolidatePage'
+import LedgerConsolidationReport from './components/LedgerConsolidationReport'
 
 function App() {
   
@@ -22,6 +23,9 @@ function App() {
             } />
             <Route path='/ledger-consolidate' element={
               <LedgerConsolidatePage />
+            } />
+            <Route path='/consolidated/ledger/:ledger_code' element={
+              <LedgerConsolidationReport />
             } />
           </Routes>
         </BrowserRouter>

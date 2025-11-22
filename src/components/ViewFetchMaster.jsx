@@ -10,6 +10,7 @@ const ViewFetchMaster = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasFetched, setHasFetched] = useState(false);
+  const [consolidationStatus, setConsolidationStatus] = useState('inactive');
   const searchInputRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
@@ -43,13 +44,14 @@ const ViewFetchMaster = () => {
     },
     ledger: {
       title: 'Ledgers',
-      apiEndpoint: '/ledgers',
+      // Dynamic API endpoint
+      apiEndpoint: consolidationStatus === 'active' ? '/consolidated' : '/ledgers',
       searchPlaceholder: '',
       itemName: 'LedgerNames',
       fields: {
         primary: 'ledger_name',
         code: 'ledger_code',
-        report: 'report',
+        report: 'tally_report',
         status: 'status',
         link_status: 'link_status',
       },
@@ -123,10 +125,7 @@ const ViewFetchMaster = () => {
       }
     };
 
-    // Add event listener
     window.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -169,25 +168,20 @@ const ViewFetchMaster = () => {
     [currentModule],
   );
 
-  // Single useEffect for data fetching - optimized
+  // Single useEffect for data fetching
   useEffect(() => {
-    // Skip if no type or module config
     if (!type || !currentModule || hasFetched) return;
 
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        // Don't clear data immediately to avoid blinking
-        console.log(`Fetching data for: ${type}`);
 
         const response = await api.get(currentModule.apiEndpoint);
 
-        // Batch state updates
         setData(response.data);
         setFilteredData(response.data);
         setHasFetched(true);
-        console.log(`${currentModule.title} data:`, response.data);
       } catch (error) {
         console.error(`Error fetching ${currentModule.title.toLowerCase()}:`, error);
         setError(`Failed to fetch ${currentModule.title.toLowerCase()}`);
@@ -199,9 +193,9 @@ const ViewFetchMaster = () => {
     };
 
     fetchData();
-  }, [type, currentModule, hasFetched]);
+  }, [type, currentModule, hasFetched, consolidationStatus]);
 
-  // Filter data based on search term - optimized
+  // Filter data based on search term
   useEffect(() => {
     if (data.length > 0) {
       const filtered = filterData(data, searchTerm);
@@ -221,41 +215,69 @@ const ViewFetchMaster = () => {
       .join(' ');
   };
 
-  const handleInventoryClick = item => {
-    navigate(`/inventory-view/${item.item_code}`);
+  const handleMasterGroupClick = item => {
+    navigate(`/master-group-view/${item.item_code}`);
   };
 
-  const handleCustomerClick = item => {
-    navigate(`/customer-view/${item.customer_code}`);
+  const handleSubGroupClick = item => {
+    navigate(`/sub-group-view/${item.customer_code}`);
   };
 
-  const handleDistributorClick = item => {
-    navigate(`/distributor-view/${item.id}`);
+  const handleLedgerClick = item => {
+    navigate(`/consolidated/ledger/${item.ledger_code}`);
   };
 
-  const handleCorporateClick = item => {
-    navigate(`/corporate-view/${item.id}`);
+  const handleDivisionClick = item => {
+    navigate(`/division-view/${item.id}`);
   };
 
-  //   Handle item click based on type
+  // Handle item click based on type
   const handleItemClick = (item, index) => {
     setSelectedIndex(index);
 
     switch (type) {
-      case 'inventory':
-        handleInventoryClick(item);
+      case 'main-group':
+        handleMasterGroupClick(item);
         break;
-      case 'customer':
-        handleCustomerClick(item);
+      case 'sub-group':
+        handleSubGroupClick(item);
         break;
-      case 'distributor':
-        handleDistributorClick(item);
+      case 'ledger':
+        handleLedgerClick(item);
         break;
-      case 'corporate':
-        handleCorporateClick(item);
+      case 'division':
+        handleDivisionClick(item);
       default:
         break;
     }
+  };
+
+  // Toggle consolidation status
+  const toggleConsolidationStatus = () => {
+    setConsolidationStatus(prev => prev === 'active' ? 'inactive' : 'active');
+    setHasFetched(false);
+    setData([]);
+    setFilteredData([]);
+  };
+
+  // Render consolidation toggle button
+  const renderConsolidationToggle = () => {
+    if (type === 'ledger') {
+      return (
+        <button
+          onClick={toggleConsolidationStatus}
+          disabled={loading}
+          className={`ml-4 px-3 py-1 text-sm rounded ${
+            consolidationStatus === 'active' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-gray-300 text-gray-700'
+          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {consolidationStatus === 'active' ? 'Consolidated View' : 'Normal View'}
+        </button>
+      );
+    }
+    return null;
   };
 
   // Render list items based on type
@@ -339,7 +361,7 @@ const ViewFetchMaster = () => {
               {/* Add link_status here for ledger only */}
               {item.link_status && (
                 <p className='w-16 ml-[73px]'>
-                  <span className={`text-xs px-2`}>{item.link_status}</span>
+                  <span className={`text-xs px-2 capitalize`}>{item.link_status}</span>
                 </p>
               )}
             </div>
@@ -367,7 +389,7 @@ const ViewFetchMaster = () => {
     return (
       <li
         key={item.id || item.item_code || index}
-        className={`border-b border-gray-300 px-1.5 py-1 transition-colors ${
+        className={`border-b border-gray-300 px-1.5 py-1 transition-colors cursor-pointer ${
           isSelected ? 'bg-yellow-100 border-yellow-300' : 'hover:bg-blue-50'
         }`}
         onClick={() => handleItemClick(item, index)}
@@ -432,20 +454,23 @@ const ViewFetchMaster = () => {
     <div className="flex font-amasis">
       <div className="w-full h-screen flex">
         <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg backdrop-blur-sm"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            <span className="text-sm font-medium">Back</span>
-          </button>
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg backdrop-blur-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            {renderConsolidationToggle()}
+          </div>
         </div>
         <div className="w-[70%] bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
           <div className="w-[955px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
