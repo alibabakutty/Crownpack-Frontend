@@ -9,6 +9,7 @@ const LedgerConsolidatePage = () => {
   const [ledgerOptions, setLedgerOptions] = useState([]);
   const [subGroupOptions, setSubGroupOptions] = useState([]);
   const [mainGroupOptions, setMainGroupOptions] = useState([]);
+  const [consolidatedData, setConsolidatedData] = useState([]);
   const [rows, setRows] = useState([{ 
     id: 1, 
     selectedLedger: null,
@@ -27,12 +28,37 @@ const LedgerConsolidatePage = () => {
     { value: 'inactive', label: 'Inactive' }
   ];
 
+  // Fetch consolidated data to check which ledgers are already active
+  useEffect(() => {
+    const fetchConsolidatedData = async () => {
+      try {
+        const response = await api.get('/connect_consolidates');
+        if (Array.isArray(response.data)) {
+          setConsolidatedData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching consolidated data:', error);
+      }
+    };
+    fetchConsolidatedData();
+  }, []);
+
   useEffect(() => {
     const fetchLedgers = async () => {
       try {
         const response = await api.get('/ledgers');
         if (Array.isArray(response.data)) {
-          const formattedLedgers = response.data.map(ledger => ({
+          // Get active ledger codes from consolidated data
+          const activeLedgerCodes = consolidatedData
+            .filter(item => item.status === 'active')
+            .map(item => item.ledger_code);
+
+          // Filter out ledgers that are already active in consolidation
+          const availableLedgers = response.data.filter(ledger => 
+            !activeLedgerCodes.includes(ledger.ledger_code)
+          );
+
+          const formattedLedgers = availableLedgers.map(ledger => ({
             value: ledger.ledger_code,
             label: `${ledger.ledger_code} - ${ledger.ledger_name}`,
             ledger_code: ledger.ledger_code,
@@ -46,7 +72,7 @@ const LedgerConsolidatePage = () => {
       }
     };
     fetchLedgers();
-  }, []);
+  }, [consolidatedData]); // Re-run when consolidatedData changes
 
   useEffect(() => {
     const fetchSubGroups = async () => {
@@ -198,24 +224,28 @@ const LedgerConsolidatePage = () => {
 
   // Submit consolidation data to backend
   const handleSubmit = async () => {
-    // Validate all rows
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      
-      if (!row.selectedLedger) {
-        toast.error(`Row ${i + 1}: Please select a ledger`, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        return;
-      }
+    // Filter valid rows (rows with ledger selected)
+    const validRows = rows.filter(row => row.selectedLedger);
 
+    // Check if there are any valid rows to submit
+    if (validRows.length === 0) {
+      toast.error('Please select at least one ledger to submit', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    // Validate valid rows have either sub group or main group
+    for (let i = 0; i < validRows.length; i++) {
+      const row = validRows[i];
+      
       if (!row.selectedSubGroup && !row.selectedMainGroup) {
-        toast.error(`Row ${i + 1}: Please select either a Sub Group or Main Group`, {
+        toast.error(`Row with ledger "${row.selectedLedger.ledger_name}": Please select either a Sub Group or Main Group`, {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -227,8 +257,30 @@ const LedgerConsolidatePage = () => {
       }
     }
 
+    // Check if any selected ledger is already active in consolidation
+    const activeLedgerCodes = consolidatedData
+      .filter(item => item.status === 'active')
+      .map(item => item.ledger_code);
+
+    const duplicateLedgers = validRows.filter(row => 
+      activeLedgerCodes.includes(row.selectedLedger.ledger_code)
+    );
+
+    if (duplicateLedgers.length > 0) {
+      const ledgerNames = duplicateLedgers.map(row => row.selectedLedger.ledger_name).join(', ');
+      toast.error(`The following ledgers are already active in consolidation: ${ledgerNames}. Please refresh the page to see updated available ledgers.`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
     // Simple confirmation dialog
-    const isConfirmed = window.confirm(`Do you wish to submit ${rows.length} consolidation record(s)?`);
+    const isConfirmed = window.confirm(`Do you wish to submit ${validRows.length} consolidation record(s)? ${rows.length - validRows.length} empty record(s) will be skipped.`);
     
     if (!isConfirmed) {
       toast.info('Submission cancelled', {
@@ -245,59 +297,101 @@ const LedgerConsolidatePage = () => {
     setIsSubmitting(true);
 
     try {
-      // Submit all rows
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const consolidationData = {
-          serial_no: i + 1, // Always 1, 2, 3, etc.
-          ledger_code: row.selectedLedger.ledger_code,
-          sub_group_code: row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
-          main_group_code: row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null,
-          status: row.selectedStatus.value
-        };
+      // Submit only valid rows
+      let successCount = 0;
+      let errorCount = 0;
 
-        console.log('Submitting consolidation data for row:', i + 1, consolidationData);
+      for (let i = 0; i < validRows.length; i++) {
+        const row = validRows[i];
+        try {
+          const consolidationData = {
+            serial_no: i + 1, // Sequential for submitted rows only
+            ledger_code: row.selectedLedger.ledger_code,
+            sub_group_code: row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
+            main_group_code: row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null,
+            status: row.selectedStatus.value
+          };
 
-        // Create the consolidation record
-        const response = await api.post('/consolidated', consolidationData);
-        
-        if (response.data) {
-          // If status is active, merge the ledger with groups
-          if (row.selectedStatus.value === 'active') {
-            await mergeLedgerWithGroups(
-              row.selectedLedger.ledger_code,
-              row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
-              row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null
-            );
-          } else {
-            // If status is inactive, demerge the ledger
-            await demergeLedger(row.selectedLedger.ledger_code);
+          console.log('Submitting consolidation data:', consolidationData);
+
+          // Create the consolidation record
+          const response = await api.post('/consolidated', consolidationData);
+          
+          if (response.data) {
+            // If status is active, merge the ledger with groups
+            if (row.selectedStatus.value === 'active') {
+              await mergeLedgerWithGroups(
+                row.selectedLedger.ledger_code,
+                row.selectedSubGroup ? row.selectedSubGroup.sub_group_code : null,
+                row.selectedMainGroup ? row.selectedMainGroup.main_group_code : null
+              );
+            } else {
+              // If status is inactive, demerge the ledger
+              await demergeLedger(row.selectedLedger.ledger_code);
+            }
+            successCount++;
           }
+        } catch (error) {
+          console.error(`Error submitting row ${i + 1}:`, error);
+          errorCount++;
+          // Continue with next row even if one fails
         }
       }
+
+      if (errorCount === 0) {
+        toast.success(`${successCount} consolidation record(s) created successfully! ${rows.length - validRows.length} empty record(s) were skipped.`, {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        // Refresh consolidated data after successful submission
+        try {
+          const response = await api.get('/connect_consolidates');
+          if (Array.isArray(response.data)) {
+            setConsolidatedData(response.data);
+          }
+        } catch (error) {
+          console.error('Error refreshing consolidated data:', error);
+        }
+      } else if (successCount > 0) {
+        toast.warning(`${successCount} record(s) submitted successfully, ${errorCount} record(s) failed. ${rows.length - validRows.length} empty record(s) were skipped.`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else {
+        toast.error(`All ${errorCount} record(s) failed to submit.`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
       
-      toast.success(`${rows.length} consolidation record(s) created successfully!`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      
-      // Reset form
-      setRows([{ 
-        id: 1, 
-        selectedLedger: null,
-        selectedSubGroup: null,
-        selectedMainGroup: null,
-        selectedStatus: { value: 'inactive', label: 'Inactive' }
-      }]);
-      setNextRowId(2);
+      // Reset form only if all submissions were successful
+      if (errorCount === 0) {
+        setRows([{ 
+          id: 1, 
+          selectedLedger: null,
+          selectedSubGroup: null,
+          selectedMainGroup: null,
+          selectedStatus: { value: 'inactive', label: 'Inactive' }
+        }]);
+        setNextRowId(2);
+      }
       
     } catch (error) {
-      console.error('Error creating consolidation record:', error);
-      toast.error(`❌ Error: ${error.response?.data?.error || error.message}`, {
+      console.error('Error in submission process:', error);
+      toast.error(`❌ Submission process error: ${error.response?.data?.error || error.message}`, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -310,7 +404,7 @@ const LedgerConsolidatePage = () => {
     }
   };
 
-  // Custom styles for react-select
+  // Custom styles for react-select with wider menu for longer labels
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -347,12 +441,12 @@ const LedgerConsolidatePage = () => {
       ...provided,
       fontSize: '12px',
       zIndex: 20,
-      minWidth: '200px',
+      minWidth: '300px', // Wider to accommodate longer labels
       width: 'auto',
     }),
     menuList: (provided) => ({
       ...provided,
-      minWidth: '200px',
+      minWidth: '300px',
     }),
     option: (provided, state) => ({
       ...provided,
@@ -421,20 +515,25 @@ const LedgerConsolidatePage = () => {
     }),
   };
 
-  // Custom component to display only the code in the select field
+  // Custom component to display only the code in the select field when selected
   const formatOptionLabel = (option, { context }) => {
     if (option.__isNew__) {
       return option.label;
     }
     
     if (context === 'value') {
+      // When displayed in the select box (after selection), show only the code
       return option.value;
     }
     
+    // When displayed in the dropdown options, show the full label
     return (
       <div className="whitespace-nowrap">
         <span className="font-medium">{option.value}</span>
         <span className="text-gray-600 ml-2">- {option.ledger_name || option.sub_group_name || option.main_group_name}</span>
+        {option.debit_credit && (
+          <span className="text-gray-500 ml-2">- {option.debit_credit}</span>
+        )}
       </div>
     );
   };
