@@ -12,7 +12,7 @@ const ImportExcelPage = () => {
     { value: 'main-groups', label: 'Main Groups', color: 'blue' },
     { value: 'sub-groups', label: 'Sub Groups', color: 'purple' },
     { value: 'ledgers', label: 'Ledgers', color: 'green' },
-    { value: 'divisions', label: 'Divisions', color: 'indigo' },
+    // { value: 'divisions', label: 'Divisions', color: 'indigo' },
   ];
 
   // Keyboard navigation handler
@@ -289,7 +289,7 @@ const ImportExcelPage = () => {
                           </div>
                         </>
                       )}
-                      {selectedTable === 'divisions' && (
+                      {/* {selectedTable === 'divisions' && (
                         <>
                           <div>
                             • <strong>Column A:</strong> division_code (optional)
@@ -304,7 +304,7 @@ const ImportExcelPage = () => {
                             • <strong>Column D:</strong> status (optional, default: Active)
                           </div>
                         </>
-                      )}
+                      )} */}
                     </div>
                   </div>
 

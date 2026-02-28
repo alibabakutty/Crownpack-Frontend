@@ -5,6 +5,8 @@ import ViewFetchMaster from './components/ViewFetchMaster'
 import ImportExcelPage from './components/ImportExcelPage'
 import LedgerConsolidatePage from './components/LedgerConsolidatePage'
 import LedgerConsolidationReport from './components/LedgerConsolidationReport'
+import VoucherTransactionPage from './components/voucher/VoucherTransactionPage'
+import DivisionMaster from './components/DivisionMaster'
 
 function App() {
   
@@ -27,6 +29,13 @@ function App() {
             <Route path='/consolidated/ledger/:ledger_code' element={
               <LedgerConsolidationReport />
             } />
+            <Route path='/voucher-transaction' element={
+              <VoucherTransactionPage />
+            } />
+            <Route path='/division-master' element={
+              <DivisionMaster />
+            }
+            />
           </Routes>
         </BrowserRouter>
       </div>
