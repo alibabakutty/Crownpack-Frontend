@@ -3,6 +3,8 @@ import Select from 'react-select';
 
 const VoucherTable = ({
   rows,
+  divisionType,
+  numberOfDivisions,
   onAddRow,
   onRemoveRow,
   onInputChange,
@@ -21,26 +23,35 @@ const VoucherTable = ({
       borderRadius: '0',
       minHeight: '30px',
       fontSize: '12px',
-      backgroundColor: state.isFocused ? '#fef9c3' : 'white', // yellow-200 when focused
+      backgroundColor: state.isFocused ? '#fef9c3' : 'white',
       boxShadow: 'none',
+      width: '250px', // Fixed width for dropdown
       '&:hover': {
-        border: '1px solid #3b82f6', // blue-500
+        border: '1px solid #3b82f6',
       },
     }),
     option: (base, state) => ({
       ...base,
       fontSize: '12px',
-      backgroundColor: state.isFocused ? '#dbeafe' : 'white', // blue-100 when focused
+      backgroundColor: state.isFocused ? '#dbeafe' : 'white',
       color: 'black',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
     }),
     menu: base => ({
       ...base,
       fontSize: '12px',
       zIndex: 9999,
+      width: '350px', // Wider menu to show full text
     }),
     singleValue: base => ({
       ...base,
       fontSize: '12px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      maxWidth: '230px',
     }),
     input: base => ({
       ...base,
@@ -56,7 +67,32 @@ const VoucherTable = ({
       ...base,
       padding: '4px',
     }),
+    placeholder: base => ({
+      ...base,
+      fontSize: '12px',
+      color: '#999',
+    }),
+    valueContainer: base => ({
+      ...base,
+      padding: '2px 8px',
+    }),
   };
+
+  // Column width configuration
+  const columnWidths = {
+    sno: '40px',
+    ledger: '260px',      // Width for the Select dropdown
+    amount: '120px',
+    type: '70px',
+    total: '100px',
+    action: '70px',
+  };
+
+  // Dynamic column widths for multiple divisions
+  const getDivisionColumnWidth = () => ({
+    amount: '100px',
+    type: '60px',
+  });
 
   // Format number with commas
   const formatNumber = num => {
@@ -67,183 +103,225 @@ const VoucherTable = ({
     });
   };
 
+  // Generate table headers based on division type
+  const renderHeaders = () => {
+    if (divisionType === 'single') {
+      return (
+        <tr className="text-[13px] border-t border-b bg-violet-200">
+          <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.ledger }}>Ledger</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.amount }}>Amount</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.type }}>Dr/Cr</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Dr</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Cr</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Net Amt</th>
+          <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Action</th>
+        </tr>
+      );
+    } else {
+      const divWidth = getDivisionColumnWidth();
+      return (
+        <tr className="text-[13px] border-t border-b bg-violet-200">
+          <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.ledger }}>Ledger</th>
+          {[...Array(numberOfDivisions)].map((_, i) => (
+            <React.Fragment key={i}>
+              <th className="p-1 border border-slate-400 text-left" style={{ width: divWidth.amount }}>
+                Div {i + 1}
+              </th>
+              <th className="p-1 border border-slate-400 text-left" style={{ width: divWidth.type }}>
+                Dr/Cr
+              </th>
+            </React.Fragment>
+          ))}
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Dr</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Cr</th>
+          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Net Amt</th>
+          <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Action</th>
+        </tr>
+      );
+    }
+  };
+
+  // Render a row cell based on column key
+  const renderCell = (row, index) => {
+    const cells = [];
+
+    // S.No
+    cells.push(
+      <td key="sno" className="p-1 border border-slate-400 text-center bg-gray-100" style={{ width: columnWidths.sno }}>
+        {index + 1}
+      </td>
+    );
+
+    // Ledger Select (combined code and name in one column)
+    cells.push(
+      <td key="ledger" className="p-1 border border-slate-400" style={{ width: columnWidths.ledger }}>
+        <Select
+          options={ledgerOptions}
+          value={ledgerOptions.find(opt => opt.value === row.ledgerCode)}
+          onChange={(selectedOption) => onLedgerChange(row.id, selectedOption)}
+          styles={customStyles}
+          placeholder="Search & select ledger..."
+          isClearable
+          isSearchable
+          menuPortalTarget={document.body}
+          menuPosition='fixed'
+          getOptionLabel={(option) => `${option.ledger_code} - ${option.ledger_name}`}
+          getOptionValue={(option) => option.value}
+        />
+      </td>
+    );
+
+    if (divisionType === 'single') {
+      // Amount
+      cells.push(
+        <td key="amount" className="p-1 border border-slate-400" style={{ width: columnWidths.amount }}>
+          <input
+            type="number"
+            value={row.amount || ''}
+            onChange={e => onInputChange(row.id, 'amount', e.target.value)}
+            className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
+            placeholder="0.00"
+            step="0.01"
+            style={{ 
+              MozAppearance: 'textfield',
+              appearance: 'textfield',
+              WebkitAppearance: 'none',
+              width: '100%'
+            }}
+            onWheel={e => e.target.blur()}
+          />
+        </td>
+      );
+
+      // Dr/Cr Type
+      cells.push(
+        <td key="type" className="p-1 border border-slate-400" style={{ width: columnWidths.type }}>
+          <select
+            value={row.type || 'Debit'}
+            onChange={e => onInputChange(row.id, 'type', e.target.value)}
+            className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            style={{ width: '100%' }}
+          >
+            <option value="Debit">Dr</option>
+            <option value="Credit">Cr</option>
+          </select>
+        </td>
+      );
+    } else {
+      // Multiple division fields
+      const divWidth = getDivisionColumnWidth();
+      for (let i = 1; i <= numberOfDivisions; i++) {
+        // Amount field
+        cells.push(
+          <td key={`d${i}Amount`} className="p-1 border border-slate-400" style={{ width: divWidth.amount }}>
+            <input
+              type="number"
+              value={row[`d${i}Amount`] || ''}
+              onChange={e => onInputChange(row.id, `d${i}Amount`, e.target.value)}
+              className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
+              placeholder="0.00"
+              step="0.01"
+              style={{ 
+                MozAppearance: 'textfield',
+                appearance: 'textfield',
+                WebkitAppearance: 'none',
+                width: '100%'
+              }}
+              onWheel={e => e.target.blur()}
+            />
+          </td>
+        );
+
+        // Type field
+        cells.push(
+          <td key={`d${i}Type`} className="p-1 border border-slate-400" style={{ width: divWidth.type }}>
+            <select
+              value={row[`d${i}Type`] || 'Debit'}
+              onChange={e => onInputChange(row.id, `d${i}Type`, e.target.value)}
+              className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+              style={{ width: '100%' }}
+            >
+              <option value="Debit">Dr</option>
+              <option value="Credit">Cr</option>
+            </select>
+          </td>
+        );
+      }
+    }
+
+    // Total Dr
+    cells.push(
+      <td key="totalDr" className="p-1 border border-slate-400 text-right bg-gray-50" style={{ width: columnWidths.total }}>
+        {formatNumber(row.totalDr)}
+      </td>
+    );
+
+    // Total Cr
+    cells.push(
+      <td key="totalCr" className="p-1 border border-slate-400 text-right bg-gray-50" style={{ width: columnWidths.total }}>
+        {formatNumber(row.totalCr)}
+      </td>
+    );
+
+    // Net Amt
+    cells.push(
+      <td key="netAmt" className="p-1 border border-slate-400 text-right bg-gray-50" style={{ width: columnWidths.total }}>
+        {formatNumber(row.netAmt)}
+      </td>
+    );
+
+    // Action
+    cells.push(
+      <td key="action" className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
+        {rows.length > 1 && (
+          <button
+            onClick={() => onRemoveRow(row.id)}
+            className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+          >
+            Remove
+          </button>
+        )}
+      </td>
+    );
+
+    return cells;
+  };
+
   return (
     <>
       {/* Transaction Table */}
-      <div className="h-[calc(100vh-138px)] overflow-auto">
-        <table className="w-full border border-slate-400">
+      <div className="h-[calc(100vh-190px)] overflow-auto">
+        <table className="w-full border border-slate-400 table-fixed">
           <thead>
-            <tr className="text-[13px] border-t border-b bg-violet-200">
-              <th className="p-1 border border-slate-400">S.No</th>
-              <th className="p-1 border border-slate-400 text-left">Ledger Code</th>
-              <th className="p-1 border border-slate-400 text-left">Ledger Name</th>
-              <th className="p-1 border border-slate-400 text-left">Division 1</th>
-              <th className="p-1 border border-slate-400 text-left">Dr/Cr</th>
-              <th className="p-1 border border-slate-400 text-left">Division 2</th>
-              <th className="p-1 border border-slate-400 text-left">Dr/Cr</th>
-              <th className="p-1 border border-slate-400 text-left">Division 3</th>
-              <th className="p-1 border border-slate-400 text-left">Dr/Cr</th>
-              <th className="p-1 border border-slate-400 text-left">Total Dr</th>
-              <th className="p-1 border border-slate-400 text-left">TotalAmt Cr</th>
-              <th className="p-1 border border-slate-400 text-left">Net Amt</th>
-              <th className="p-1 border border-slate-400">Action</th>
-            </tr>
+            {renderHeaders()}
           </thead>
           <tbody>
-            {rows.map((row, index) => {
-              const selectedLeger = ledgerOptions.find(option => option.value === row.ledgerCode);
-
-              return (
-                <tr key={row.id} className="text-[12px]">
-                  <td className="p-1 border border-slate-400 text-center bg-gray-100">
-                    {index + 1}
-                  </td>
-
-                  {/* Ledger Code */}
-                  <td className="p-1 border border-slate-400">
-                    <Select
-                      options={ledgerOptions}
-                      value={selectedLeger}
-                      onChange={(selectedOption) => onLedgerChange(row.id, selectedOption)}
-                      styles={customStyles}
-                      placeholder="Select Ledger"
-                      isClearable
-                      isSearchable
-                      menuPortalTarget={document.body}
-                      menuPosition='fixed'
-                    />
-                  </td>
-
-                  {/* Ledger Name */}
-                  <td className="p-1 border border-slate-400">
-                    <input
-                      type="text"
-                      value={row.ledgerName}
-                      readOnly
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                      placeholder="Auto-filled from ledger selection"
-                    />
-                  </td>
-
-                  {/* D1 Amount */}
-                  <td className="p-1 border border-slate-400">
-                    <input
-                      type="number"
-                      value={row.d1Amount}
-                      onChange={e => onInputChange(row.id, 'd1Amount', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
-                      placeholder="0.00"
-                      step="0.01"
-                    />
-                  </td>
-
-                  {/* D1 Dr/Cr */}
-                  <td className="p-1 border border-slate-400">
-                    <select
-                      value={row.d1Type}
-                      onChange={e => onInputChange(row.id, 'd1Type', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                    >
-                      <option value="Debit">Dr</option>
-                      <option value="Credit">Cr</option>
-                    </select>
-                  </td>
-
-                  {/* D2 Amount */}
-                  <td className="p-1 border border-slate-400">
-                    <input
-                      type="number"
-                      value={row.d2Amount}
-                      onChange={e => onInputChange(row.id, 'd2Amount', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
-                      placeholder="0.00"
-                      step="0.01"
-                    />
-                  </td>
-
-                  {/* D2 Dr/Cr */}
-                  <td className="p-1 border border-slate-400">
-                    <select
-                      value={row.d2Type}
-                      onChange={e => onInputChange(row.id, 'd2Type', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                    >
-                      <option value="Debit">Dr</option>
-                      <option value="Credit">Cr</option>
-                    </select>
-                  </td>
-
-                  {/* D3 Amount */}
-                  <td className="p-1 border border-slate-400">
-                    <input
-                      type="number"
-                      value={row.d3Amount}
-                      onChange={e => onInputChange(row.id, 'd3Amount', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
-                      placeholder="0.00"
-                      step="0.01"
-                    />
-                  </td>
-
-                  {/* D3 Dr/Cr */}
-                  <td className="p-1 border border-slate-400">
-                    <select
-                      value={row.d3Type}
-                      onChange={e => onInputChange(row.id, 'd3Type', e.target.value)}
-                      className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-                    >
-                      <option value="Debit">Dr</option>
-                      <option value="Credit">Cr</option>
-                    </select>
-                  </td>
-
-                  {/* Total Dr (Read-only) */}
-                  <td className="p-1 border border-slate-400 text-right bg-gray-50">
-                    {formatNumber(row.totalDr)}
-                  </td>
-
-                  {/* TotalAmt Cr (Read-only) */}
-                  <td className="p-1 border border-slate-400 text-right bg-gray-50">
-                    {formatNumber(row.totalCr)}
-                  </td>
-
-                  {/* Net Amt (Read-only) */}
-                  <td className="p-1 border border-slate-400 text-right bg-gray-50">
-                    {formatNumber(row.netAmt)}
-                  </td>
-
-                  {/* Action */}
-                  <td className="p-1 border border-slate-400 text-center">
-                    {rows.length > 1 && (
-                      <button
-                        onClick={() => onRemoveRow(row.id)}
-                        className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {rows.map((row, index) => (
+              <tr key={row.id} className="text-[12px]">
+                {renderCell(row, index)}
+              </tr>
+            ))}
           </tbody>
 
           {/* Grand Totals Row */}
           <tfoot>
             <tr className="text-[12px] bg-yellow-100 font-bold">
-              <td colSpan="9" className="p-1 border border-slate-400 text-right">
+              <td colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)} 
+                  className="p-1 border border-slate-400 text-right">
                 Grand Total:
               </td>
-              <td className="p-1 border border-slate-400 text-right">
+              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
                 {formatNumber(grandTotalDr)}
               </td>
-              <td className="p-1 border border-slate-400 text-right">
+              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
                 {formatNumber(grandTotalCr)}
               </td>
-              <td className="p-1 border border-slate-400 text-right">
+              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
                 {formatNumber(grandNetAmt)}
               </td>
-              <td className="p-1 border border-slate-400"></td>
+              <td className="p-1 border border-slate-400" style={{ width: columnWidths.action }}></td>
             </tr>
           </tfoot>
         </table>

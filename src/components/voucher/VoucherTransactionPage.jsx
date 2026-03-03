@@ -6,37 +6,58 @@ import FetchElements from './FetchElements';
 const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('VCH-10001');
   const [currentDateTime, setCurrentDateTime] = useState('');
-  const [rows, setRows] = useState([
-    {
+  const [divisionType, setDivisionType] = useState('single'); // 'single' or 'multiple'
+  const [numberOfDivisions, setNumberOfDivisions] = useState(3); // Default 3 for multiple
+  const [rows, setRows] = useState([]);
+  const [nextRowId, setNextRowId] = useState(1);
+  const navigate = useNavigate();
+  const { ledgerOptions } = FetchElements();
+
+  // Initialize rows based on division type
+  useEffect(() => {
+    initializeRows();
+  }, [divisionType, numberOfDivisions]);
+
+  const initializeRows = () => {
+    const baseRow = {
       id: 1,
       ledgerCode: '',
       ledgerName: '',
-      d1Amount: '',
-      d1Type: 'Debit',
-      d2Amount: '',
-      d2Type: 'Debit',
-      d3Amount: '',
-      d3Type: 'Debit',
-      totalDr: '',
-      totalCr: '',
-      netAmt: '',
-    },
-  ]);
-  const [nextRowId, setNextRowId] = useState(2);
-  const navigate = useNavigate();
-  const { ledgerOptions } = FetchElements();  // this is a hook
+      ledgerData: null, // Store full ledger data
+    };
 
+    if (divisionType === 'single') {
+      // Single division: only amount and type
+      setRows([{
+        ...baseRow,
+        amount: '',
+        type: 'Debit',
+        totalDr: '',
+        totalCr: '',
+        netAmt: '',
+      }]);
+    } else {
+      // Multiple divisions: create dynamic division fields
+      const multipleRow = { ...baseRow };
+      for (let i = 1; i <= numberOfDivisions; i++) {
+        multipleRow[`d${i}Amount`] = '';
+        multipleRow[`d${i}Type`] = 'Debit';
+      }
+      multipleRow.totalDr = '';
+      multipleRow.totalCr = '';
+      multipleRow.netAmt = '';
+      setRows([multipleRow]);
+    }
+    setNextRowId(2);
+  };
 
-  // Set current date and time on component mount
+  // Set current date and time
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date();
-      // Format date as DD-MM-YYYY
       const day = now.getDate().toString().padStart(2, '0');
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const year = now.getFullYear();
-
-      // Format time as HH:mm:ss (24 hour)
       const hours = now.getHours().toString().padStart(2, '0');
       const minutes = now.getMinutes().toString().padStart(2, '0');
       const seconds = now.getSeconds().toString().padStart(2, '0');
@@ -46,85 +67,113 @@ const VoucherTransactionPage = () => {
     };
 
     updateDateTime();
-
     const interval = setInterval(updateDateTime, 100);
-
     return () => clearInterval(interval);
   }, []);
 
   // Add new row
   const addNewRow = () => {
     const newRowId = nextRowId;
-    setRows(prevRows => [
-      ...prevRows,
-      {
-        id: newRowId,
-        ledgerCode: '',
-        ledgerName: '',
-        d1Amount: '',
-        d1Type: 'Debit',
-        d2Amount: '',
-        d2Type: 'Debit',
-        d3Amount: '',
-        d3Type: 'Debit',
+    const baseRow = {
+      id: newRowId,
+      ledgerCode: '',
+      ledgerName: '',
+      ledgerData: null,
+    };
+
+    if (divisionType === 'single') {
+      setRows(prev => [...prev, {
+        ...baseRow,
+        amount: '',
+        type: 'Debit',
         totalDr: '',
         totalCr: '',
         netAmt: '',
-      },
-    ]);
-    setNextRowId(prevId => prevId + 1);
+      }]);
+    } else {
+      const multipleRow = { ...baseRow };
+      for (let i = 1; i <= numberOfDivisions; i++) {
+        multipleRow[`d${i}Amount`] = '';
+        multipleRow[`d${i}Type`] = 'Debit';
+      }
+      multipleRow.totalDr = '';
+      multipleRow.totalCr = '';
+      multipleRow.netAmt = '';
+      setRows(prev => [...prev, multipleRow]);
+    }
+    setNextRowId(prev => prev + 1);
   };
 
   // Remove row
   const removeRow = rowId => {
     if (rows.length > 1) {
-      setRows(prevRows => prevRows.filter(row => row.id !== rowId));
+      setRows(prev => prev.filter(row => row.id !== rowId));
     }
   };
 
-  // Handle input changes
-  const handleInputChange = (rowId, field, value) => {
-    setRows(prevRows => prevRows.map(row => {
-      if (row.id === rowId) {
-        const updatedRow = { ...row, [field]: value };
-        
-        // Auto-calculate totals when amounts or types change
-        if (field.includes('Amount') || field.includes('Type')) {
-          return calculateRowTotals(updatedRow);
-        }
-        
-        return updatedRow;
-      }
-      return row;
-    }));
-  };
-
+  // Handle ledger selection
   const handleLedgerChange = (rowId, selectedOption) => {
-    setRows(prevRows => prevRows.map(row => {
+    setRows(prev => prev.map(row => {
       if (row.id === rowId) {
         return {
           ...row,
           ledgerCode: selectedOption ? selectedOption.value : '',
           ledgerName: selectedOption ? selectedOption.ledger_name : '',
+          ledgerData: selectedOption || null,
         };
       }
       return row;
-    }))
-  }
+    }));
+  };
 
-  // Calculate row totals
-  const calculateRowTotals = (row) => {
-    const d1Dr = row.d1Type === 'Debit' ? (parseFloat(row.d1Amount) || 0) : 0;
-    const d1Cr = row.d1Type === 'Credit' ? (parseFloat(row.d1Amount) || 0) : 0;
-    
-    const d2Dr = row.d2Type === 'Debit' ? (parseFloat(row.d2Amount) || 0) : 0;
-    const d2Cr = row.d2Type === 'Credit' ? (parseFloat(row.d2Amount) || 0) : 0;
-    
-    const d3Dr = row.d3Type === 'Debit' ? (parseFloat(row.d3Amount) || 0) : 0;
-    const d3Cr = row.d3Type === 'Credit' ? (parseFloat(row.d3Amount) || 0) : 0;
+  // Handle input changes
+  const handleInputChange = (rowId, field, value) => {
+    setRows(prev => prev.map(row => {
+      if (row.id === rowId) {
+        const updatedRow = { ...row, [field]: value };
+        
+        // Auto-calculate totals
+        if (divisionType === 'single') {
+          return calculateSingleRowTotals(updatedRow);
+        } else {
+          return calculateMultipleRowTotals(updatedRow, numberOfDivisions);
+        }
+      }
+      return row;
+    }));
+  };
 
-    const totalDr = d1Dr + d2Dr + d3Dr;
-    const totalCr = d1Cr + d2Cr + d3Cr;
+  // Calculate totals for single division
+  const calculateSingleRowTotals = (row) => {
+    const amount = parseFloat(row.amount) || 0;
+    const totalDr = row.type === 'Debit' ? amount : 0;
+    const totalCr = row.type === 'Credit' ? amount : 0;
+    const netAmt = totalDr - totalCr;
+
+    return {
+      ...row,
+      totalDr: totalDr.toFixed(2),
+      totalCr: totalCr.toFixed(2),
+      netAmt: netAmt.toFixed(2),
+    };
+  };
+
+  // Calculate totals for multiple divisions
+  const calculateMultipleRowTotals = (row, numDivisions) => {
+    let totalDr = 0;
+    let totalCr = 0;
+
+    for (let i = 1; i <= numDivisions; i++) {
+      const amount = parseFloat(row[`d${i}Amount`]) || 0;
+      const type = row[`d${i}Type`];
+      
+      if (type === 'Debit') {
+        totalDr += amount;
+      } else {
+        totalCr += amount;
+      }
+    }
+
     const netAmt = totalDr - totalCr;
 
     return {
@@ -158,6 +207,8 @@ const VoucherTransactionPage = () => {
     console.log('Voucher Data:', {
       voucherNumber,
       dateTime: currentDateTime,
+      divisionType,
+      numberOfDivisions: divisionType === 'multiple' ? numberOfDivisions : 1,
       transactions: rows,
       totals: { grandTotalDr, grandTotalCr, grandNetAmt },
     });
@@ -190,7 +241,7 @@ const VoucherTransactionPage = () => {
           </h2>
         </div>
 
-        {/* Voucher Number and Date Time Header */}
+        {/* Controls Header - Simplified */}
         <div className="flex justify-between items-center px-4 py-2 bg-blue-100 border-b border-gray-300">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -198,11 +249,58 @@ const VoucherTransactionPage = () => {
               <input
                 type="text"
                 value={voucherNumber}
+                onChange={(e) => setVoucherNumber(e.target.value)}
                 className="px-2 py-1 text-sm border border-gray-300 rounded w-32 focus:outline-none focus:border-blue-500"
                 placeholder="Voucher No"
               />
             </div>
+
+            {/* Division Type Selection - Clean and Simple */}
+            <div className="flex items-center gap-4 ml-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold">Division Type:</span>
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="divisionType"
+                    value="single"
+                    checked={divisionType === 'single'}
+                    onChange={(e) => setDivisionType(e.target.value)}
+                    className="cursor-pointer"
+                  />
+                  <span>Single</span>
+                </label>
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="divisionType"
+                    value="multiple"
+                    checked={divisionType === 'multiple'}
+                    onChange={(e) => setDivisionType(e.target.value)}
+                    className="cursor-pointer"
+                  />
+                  <span>Multiple</span>
+                </label>
+              </div>
+
+              {/* Number of Divisions for Multiple Mode */}
+              {divisionType === 'multiple' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">Divisions:</span>
+                  <select
+                    value={numberOfDivisions}
+                    onChange={(e) => setNumberOfDivisions(parseInt(e.target.value))}
+                    className="px-2 py-1 text-sm border border-gray-300 rounded w-16 focus:outline-none focus:border-blue-500"
+                  >
+                    {[2, 3, 4, 5].map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Date & Time:</span>
             <span className="text-sm bg-white px-3 py-1 border border-gray-300 rounded">
@@ -214,6 +312,8 @@ const VoucherTransactionPage = () => {
         {/* Transaction Table Component */}
         <VoucherTable
           rows={rows}
+          divisionType={divisionType}
+          numberOfDivisions={numberOfDivisions}
           onAddRow={addNewRow}
           onRemoveRow={removeRow}
           onInputChange={handleInputChange}

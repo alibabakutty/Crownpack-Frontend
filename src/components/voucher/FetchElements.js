@@ -1,14 +1,46 @@
-import { useEffect, useState } from 'react'
-import api from '../../services/api'
+import { useEffect, useState } from 'react';
+import api from '../../services/api';
 
 const FetchElements = () => {   
     const [ledgerOptions, setLedgerOptions] = useState([]);
     const [subGroupOptions, setSubGroupOptions] = useState([]);
     const [mainGroupOptions, setMainGroupOptions] = useState([]);
+    const [divisionOptions, setDivisionOptions] = useState([]);
+    const [loading, setLoading] = useState({
+        ledgers: false,
+        subgroups: false,
+        maingroups: false,
+        divisions: false
+    });
 
-    // fetch ledgers
+    // Fetch divisions
+    useEffect(() => {
+        const fetchDivisions = async () => {
+            setLoading(prev => ({ ...prev, divisions: true }));
+            try {
+                const response = await api.get('/divisions');
+                if (Array.isArray(response.data)) {
+                    const formattedDivisions = response.data.map(division => ({
+                        value: division.id,
+                        label: division.division_name,
+                        ...division
+                    }));
+                    setDivisionOptions(formattedDivisions);
+                    console.log('Fetched Divisions:', response.data);
+                }
+            } catch (error) {
+                console.error('Error fetching divisions:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, divisions: false }));
+            }
+        };
+        fetchDivisions();
+    }, []);
+
+    // Fetch ledgers
     useEffect(() => {
         const fetchLedgers = async () => {
+            setLoading(prev => ({ ...prev, ledgers: true }));
             try {
                 const response = await api.get('/ledgers');
                 if (Array.isArray(response.data)) {
@@ -24,17 +56,19 @@ const FetchElements = () => {
                 }
             } catch (error) {
                 console.error('Error fetching ledgers:', error);
-                
+            } finally {
+                setLoading(prev => ({ ...prev, ledgers: false }));
             }
-        }
+        };
         fetchLedgers();
     }, []);
 
+    // Fetch sub groups
     useEffect(() => {
         const fetchSubGroups = async () => {
+            setLoading(prev => ({ ...prev, subgroups: true }));
             try {
                 const response = await api.get('/sub_groups');
-
                 if (Array.isArray(response.data)) {
                     const formattedSubGroups = response.data.map(subgroup => ({
                         value: subgroup.sub_group_code,
@@ -42,22 +76,25 @@ const FetchElements = () => {
                         sub_group_code: subgroup.sub_group_code,
                         sub_group_name: subgroup.sub_group_name,
                         ...subgroup,
-                    }))
+                    }));
                     setSubGroupOptions(formattedSubGroups);
                     console.log('Fetched Sub Groups:', response.data);
                 }
             } catch (error) {
                 console.error('Error fetching sub groups:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, subgroups: false }));
             }
-        }
+        };
         fetchSubGroups();
     }, []);
 
+    // Fetch main groups
     useEffect(() => {
         const fetchMainGroups = async () => {
+            setLoading(prev => ({ ...prev, maingroups: true }));
             try {
                 const response = await api.get('/main_groups');
-
                 if (Array.isArray(response.data)) {
                     const formattedMainGroups = response.data.map(maingroup => ({
                         value: maingroup.main_group_code,
@@ -65,18 +102,26 @@ const FetchElements = () => {
                         main_group_code: maingroup.main_group_code,
                         main_group_name: maingroup.main_group_name,
                         ...maingroup,
-                    }))
+                    }));
                     setMainGroupOptions(formattedMainGroups);
                     console.log('Fetched main groups:', response.data);
                 }
             } catch (error) {
-                console.error('Fetched main groups:', error);
+                console.error('Error fetching main groups:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, maingroups: false }));
             }
-        }
+        };
         fetchMainGroups();
-    }, [])
+    }, []);
 
-    return { ledgerOptions, subGroupOptions, mainGroupOptions };
-}
+    return { 
+        ledgerOptions, 
+        subGroupOptions, 
+        mainGroupOptions, 
+        divisionOptions,
+        loading 
+    };
+};
 
-export default FetchElements
+export default FetchElements;
