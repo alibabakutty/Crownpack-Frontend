@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VoucherTable from './VoucherTable';
 import FetchElements from './FetchElements';
+import api from '../../services/api';
 
 const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('VCH-10001');
@@ -10,6 +11,7 @@ const VoucherTransactionPage = () => {
   const [numberOfDivisions, setNumberOfDivisions] = useState(3); // Default 3 for multiple
   const [rows, setRows] = useState([]);
   const [nextRowId, setNextRowId] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { ledgerOptions } = FetchElements();
 
@@ -203,16 +205,123 @@ const VoucherTransactionPage = () => {
     navigate(-1);
   };
 
-  const handleSubmit = () => {
-    console.log('Voucher Data:', {
+  // ========== UPDATED HANDLE SUBMIT ==========
+  const handleSubmit = async () => {
+    console.log('🔵 Submit button clicked!');
+    console.log('API Base URL:', api.defaults.baseURL);
+    // Validation - Check if any rows have ledger selected
+    const invalidRows = rows.filter(row => !row.ledgerCode);
+    if (invalidRows.length > 0) {
+      alert('Please select ledger for all rows');
+      return;
+    }
+
+    // Validation - Check if amounts are entered
+    if (divisionType === 'single') {
+      const rowsWithoutAmount = rows.filter(row => !row.amount || parseFloat(row.amount) === 0);
+      if (rowsWithoutAmount.length > 0) {
+        alert('Please enter amount for all rows');
+        return;
+      }
+    } else {
+      // For multiple divisions, check if at least one division has amount
+      const invalidMultipleRows = rows.filter(row => {
+        let hasAmount = false;
+        for (let i = 1; i <= numberOfDivisions; i++) {
+          if (parseFloat(row[`d${i}Amount`]) > 0) {
+            hasAmount = true;
+            break;
+          }
+        }
+        return !hasAmount;
+      });
+      
+      if (invalidMultipleRows.length > 0) {
+        alert('Please enter amount in at least one division for all rows');
+        return;
+      }
+    }
+
+    // Validation - Check if debit equals credit
+    const { grandTotalDr, grandTotalCr } = calculateGrandTotals();
+    if (parseFloat(grandTotalDr) !== parseFloat(grandTotalCr)) {
+      alert(`Voucher is not balanced! Debit: ${grandTotalDr}, Credit: ${grandTotalCr}`);
+      return;
+    }
+
+    // Prepare data for API
+    const voucherData = {
       voucherNumber,
       dateTime: currentDateTime,
       divisionType,
       numberOfDivisions: divisionType === 'multiple' ? numberOfDivisions : 1,
-      transactions: rows,
-      totals: { grandTotalDr, grandTotalCr, grandNetAmt },
-    });
-    alert('Voucher submitted successfully!');
+      transactions: rows.map(row => ({
+        ledgerCode: row.ledgerCode,
+        ledgerName: row.ledgerName,
+        // Single division fields
+        amount: row.amount || 0,
+        type: row.type || 'Debit',
+        // Multiple division fields
+        d1Amount: row.d1Amount || 0,
+        d1Type: row.d1Type || 'Debit',
+        d2Amount: row.d2Amount || 0,
+        d2Type: row.d2Type || 'Debit',
+        d3Amount: row.d3Amount || 0,
+        d3Type: row.d3Type || 'Debit',
+        d4Amount: row.d4Amount || 0,
+        d4Type: row.d4Type || 'Debit',
+        d5Amount: row.d5Amount || 0,
+        d5Type: row.d5Type || 'Debit',
+        // Calculated fields
+        totalDr: row.totalDr || 0,
+        totalCr: row.totalCr || 0,
+        netAmt: row.netAmt || 0
+      })),
+      totals: calculateGrandTotals()
+    };
+
+    console.log('Submitting Voucher:', voucherData);
+    
+    // Show loading state
+    setIsSubmitting(true);
+
+    try {
+      // API call to save voucher
+      const response = await api.post('http://localhost:7000/vouchers', voucherData);
+      
+      console.log('Voucher saved successfully:', response.data);
+      
+      // Show success message
+      alert(`Voucher ${voucherNumber} submitted successfully!`);
+      
+      // Reset form or navigate
+      // Option 1: Reset form for new entry
+      resetForm();
+      
+      // Option 2: Navigate to voucher list or print page
+      // navigate('/vouchers/list');
+      
+    } catch (error) {
+      console.error('Error saving voucher:', error);
+      
+      // Show error message
+      alert(error.response?.data?.message || 'Failed to submit voucher. Please try again.');
+      
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    // Generate new voucher number
+    const nextNum = parseInt(voucherNumber.split('-')[1]) + 1;
+    setVoucherNumber(`VCH-${nextNum}`);
+    
+    // Reset rows
+    setDivisionType('single');
+    setNumberOfDivisions(3);
+    initializeRows();
   };
 
   return (
@@ -322,6 +431,7 @@ const VoucherTransactionPage = () => {
           grandTotalDr={grandTotalDr}
           grandTotalCr={grandTotalCr}
           grandNetAmt={grandNetAmt}
+          isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
         />
       </div>

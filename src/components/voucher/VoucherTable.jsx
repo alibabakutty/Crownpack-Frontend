@@ -14,6 +14,7 @@ const VoucherTable = ({
   grandTotalCr,
   grandNetAmt,
   onSubmit,
+  isSubmitting
 }) => {
   // Custom styles for react-select
   const customStyles = {
@@ -61,11 +62,13 @@ const VoucherTable = ({
     }),
     dropdownIndicator: base => ({
       ...base,
-      padding: '4px',
+      // padding: '4px',
+      display: 'none'
     }),
     clearIndicator: base => ({
       ...base,
-      padding: '4px',
+      // padding: '4px',
+      display: 'none'
     }),
     placeholder: base => ({
       ...base,
@@ -339,6 +342,7 @@ const VoucherTable = ({
         <div className="flex gap-2">
           <button
             onClick={onSubmit}
+            disabled={isSubmitting}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
           >
             Submit Voucher

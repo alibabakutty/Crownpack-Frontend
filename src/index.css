@@ -25,3 +25,16 @@ input[type=number] {
   -moz-appearance: textfield; /* Firefox */
   appearance: textfield; /* Standard */
 }
+
+/* Hide default select arrow */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none; /* Remove arrow */
+}
+
+/* For IE */
+select::-ms-expand {
+  display: none;
+}
