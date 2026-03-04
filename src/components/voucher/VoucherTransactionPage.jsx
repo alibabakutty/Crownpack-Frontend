@@ -8,7 +8,7 @@ const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('VCH-10001');
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [divisionType, setDivisionType] = useState('single'); // 'single' or 'multiple'
-  const [numberOfDivisions, setNumberOfDivisions] = useState(3); // Default 3 for multiple
+  const [numberOfDivisions, setNumberOfDivisions] = useState(5); // Default 3 for multiple
   const [rows, setRows] = useState([]);
   const [nextRowId, setNextRowId] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

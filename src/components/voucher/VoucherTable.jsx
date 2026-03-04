@@ -10,11 +10,6 @@ const VoucherTable = ({
   onInputChange,
   onLedgerChange,
   ledgerOptions,
-  grandTotalDr,
-  grandTotalCr,
-  grandNetAmt,
-  onSubmit,
-  isSubmitting
 }) => {
   // Custom styles for react-select
   const customStyles = {
@@ -66,12 +61,10 @@ const VoucherTable = ({
     }),
     dropdownIndicator: base => ({
       ...base,
-      // padding: '4px',
       display: 'none'
     }),
     clearIndicator: base => ({
       ...base,
-      // padding: '4px',
       display: 'none'
     }),
     placeholder: base => ({
@@ -85,20 +78,20 @@ const VoucherTable = ({
     }),
   };
 
-  // Column width configuration
+  // Column width configuration - REDUCED D/C COLUMN WIDTH
   const columnWidths = {
     sno: '40px',
-    ledger: '260px',      // Width for the Select dropdown
+    ledger: '260px',
     amount: '120px',
-    type: '70px',
+    type: '35px', // Reduced from 70px to 35px
     total: '100px',
-    action: '70px',
+    action: '35px',
   };
 
-  // Dynamic column widths for multiple divisions
+  // Dynamic column widths for multiple divisions - REDUCED D/C COLUMN WIDTH
   const getDivisionColumnWidth = () => ({
     amount: '100px',
-    type: '60px',
+    type: '35px', // Reduced from 60px to 35px
   });
 
   // Format number with commas
@@ -114,7 +107,7 @@ const VoucherTable = ({
   const renderHeaders = () => {
     if (divisionType === 'single') {
       return (
-        <tr className="text-[13px] border-t border-b bg-violet-200">
+        <tr className="text-[12px] border-t border-b bg-violet-200">
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.ledger }}>Ledger</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.amount }}>Amount</th>
@@ -128,7 +121,7 @@ const VoucherTable = ({
     } else {
       const divWidth = getDivisionColumnWidth();
       return (
-        <tr className="text-[13px] border-t border-b bg-violet-200">
+        <tr className="text-[12px] border-t border-b bg-violet-200">
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.ledger }}>Ledger</th>
           {[...Array(numberOfDivisions)].map((_, i) => (
@@ -161,7 +154,7 @@ const VoucherTable = ({
       </td>
     );
 
-    // Ledger Select (combined code and name in one column)
+    // Ledger Select
     cells.push(
       <td key="ledger" className="p-1 border border-slate-400" style={{ width: columnWidths.ledger }}>
         <Select
@@ -174,15 +167,11 @@ const VoucherTable = ({
           isSearchable
           menuPortalTarget={document.body}
           menuPosition='fixed'
-          // getOptionLabel={(option) => `${option.ledger_code} - ${option.ledger_name}`}
           getOptionValue={(option) => option.value}
           formatOptionLabel={(option, { context }) => {
-            // When showing dropdown list
             if (context === 'menu') {
               return `${option.ledger_code} - ${option.ledger_name}`;
             }
-
-            // When showing selected value in input
             return option.ledger_name;
           }}
         />
@@ -211,14 +200,14 @@ const VoucherTable = ({
         </td>
       );
 
-      // Dr/Cr Type
+      // Dr/Cr Type - with reduced width
       cells.push(
         <td key="type" className="p-1 border border-slate-400" style={{ width: columnWidths.type }}>
           <select
             value={row.type || 'Debit'}
             onChange={e => onInputChange(row.id, 'type', e.target.value)}
-            className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-            style={{ width: '100%' }}
+            className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-center"
+            style={{ width: '100%', padding: '4px 2px' }}
           >
             <option value="Debit">Dr</option>
             <option value="Credit">Cr</option>
@@ -250,14 +239,14 @@ const VoucherTable = ({
           </td>
         );
 
-        // Type field
+        // Type field - with reduced width and text centered
         cells.push(
           <td key={`d${i}Type`} className="p-1 border border-slate-400" style={{ width: divWidth.type }}>
             <select
               value={row[`d${i}Type`] || 'Debit'}
               onChange={e => onInputChange(row.id, `d${i}Type`, e.target.value)}
-              className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
-              style={{ width: '100%' }}
+              className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-center"
+              style={{ width: '100%',padding: '4px 2px' }}
             >
               <option value="Debit">Dr</option>
               <option value="Credit">Cr</option>
@@ -289,23 +278,20 @@ const VoucherTable = ({
     );
 
     // Action
-    // Action - Modified to show + on last row, - on other rows
     cells.push(
       <td key="action" className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
         {index === rows.length - 1 ? (
-          // Last row - Show + button to add new row
           <button
             onClick={onAddRow}
-            className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 w-full"
+            className="px-1 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 w-full" style={{ minWidth: '25px' }}
           >
             +
           </button>
         ) : (
-          // Other rows - Show - button to remove row (only if more than 1 row)
           rows.length > 1 && (
             <button
               onClick={() => onRemoveRow(row.id)}
-              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 w-full"
+              className="px-1 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 w-full" style={{ minWidth: '25px' }}
             >
               -
             </button>
@@ -320,9 +306,9 @@ const VoucherTable = ({
   return (
     <>
       {/* Transaction Table */}
-      <div className="h-[calc(100vh-190px)] overflow-auto">
+      <div className="h-[calc(100vh-110px)] overflow-auto">
         <table className="w-full border border-slate-400 table-fixed">
-          <thead>
+          <thead className='sticky top-0 bg-violet-200 z-10'>
             {renderHeaders()}
           </thead>
           <tbody>
