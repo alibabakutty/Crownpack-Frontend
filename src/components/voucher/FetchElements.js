@@ -46,7 +46,8 @@ const FetchElements = () => {
                 if (Array.isArray(response.data)) {
                     const formattedLedgers = response.data.map(ledger => ({
                         value: ledger.ledger_code,
-                        label: `${ledger.ledger_code} - ${ledger.ledger_name}`,
+                        // label: `${ledger.ledger_code} - ${ledger.ledger_name}`,
+                        label: ledger.ledger_name,
                         ledger_code: ledger.ledger_code,
                         ledger_name: ledger.ledger_name,
                         ...ledger

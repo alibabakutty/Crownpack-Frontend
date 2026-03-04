@@ -34,8 +34,12 @@ const VoucherTable = ({
     option: (base, state) => ({
       ...base,
       fontSize: '12px',
+      padding: '2px 5px',
+      minHeight: '4px',
       backgroundColor: state.isFocused ? '#dbeafe' : 'white',
       color: 'black',
+      borderBottom: '1px solid #e5e7eb',
+      cursor: 'pointer',
       whiteSpace: 'nowrap',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -112,12 +116,12 @@ const VoucherTable = ({
       return (
         <tr className="text-[13px] border-t border-b bg-violet-200">
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.ledger }}>Ledger</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.amount }}>Amount</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.type }}>Dr/Cr</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Dr</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Cr</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Net Amt</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.ledger }}>Ledger</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.amount }}>Amount</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.type }}>Dr/Cr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Dr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Cr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Net Amt</th>
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Action</th>
         </tr>
       );
@@ -126,20 +130,20 @@ const VoucherTable = ({
       return (
         <tr className="text-[13px] border-t border-b bg-violet-200">
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.ledger }}>Ledger</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.ledger }}>Ledger</th>
           {[...Array(numberOfDivisions)].map((_, i) => (
             <React.Fragment key={i}>
-              <th className="p-1 border border-slate-400 text-left" style={{ width: divWidth.amount }}>
+              <th className="p-1 border border-slate-400 text-center" style={{ width: divWidth.amount }}>
                 Div {i + 1}
               </th>
-              <th className="p-1 border border-slate-400 text-left" style={{ width: divWidth.type }}>
+              <th className="p-1 border border-slate-400 text-center" style={{ width: divWidth.type }}>
                 Dr/Cr
               </th>
             </React.Fragment>
           ))}
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Dr</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Total Cr</th>
-          <th className="p-1 border border-slate-400 text-left" style={{ width: columnWidths.total }}>Net Amt</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Dr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Cr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Net Amt</th>
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Action</th>
         </tr>
       );
@@ -162,7 +166,7 @@ const VoucherTable = ({
       <td key="ledger" className="p-1 border border-slate-400" style={{ width: columnWidths.ledger }}>
         <Select
           options={ledgerOptions}
-          value={ledgerOptions.find(opt => opt.value === row.ledgerCode)}
+          value={ledgerOptions.find(opt => opt.value === row.ledgerCode) || null}
           onChange={(selectedOption) => onLedgerChange(row.id, selectedOption)}
           styles={customStyles}
           placeholder="Search & select ledger..."
@@ -170,8 +174,17 @@ const VoucherTable = ({
           isSearchable
           menuPortalTarget={document.body}
           menuPosition='fixed'
-          getOptionLabel={(option) => `${option.ledger_code} - ${option.ledger_name}`}
+          // getOptionLabel={(option) => `${option.ledger_code} - ${option.ledger_name}`}
           getOptionValue={(option) => option.value}
+          formatOptionLabel={(option, { context }) => {
+            // When showing dropdown list
+            if (context === 'menu') {
+              return `${option.ledger_code} - ${option.ledger_name}`;
+            }
+
+            // When showing selected value in input
+            return option.ledger_name;
+          }}
         />
       </td>
     );
@@ -187,7 +200,7 @@ const VoucherTable = ({
             className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
             placeholder="0.00"
             step="0.01"
-            style={{ 
+            style={{
               MozAppearance: 'textfield',
               appearance: 'textfield',
               WebkitAppearance: 'none',
@@ -226,7 +239,7 @@ const VoucherTable = ({
               className="w-full p-1 focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent text-right"
               placeholder="0.00"
               step="0.01"
-              style={{ 
+              style={{
                 MozAppearance: 'textfield',
                 appearance: 'textfield',
                 WebkitAppearance: 'none',
@@ -311,8 +324,8 @@ const VoucherTable = ({
           {/* Grand Totals Row */}
           <tfoot>
             <tr className="text-[12px] bg-yellow-100 font-bold">
-              <td colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)} 
-                  className="p-1 border border-slate-400 text-right">
+              <td colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
+                className="p-1 border border-slate-400 text-right">
                 Grand Total:
               </td>
               <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
