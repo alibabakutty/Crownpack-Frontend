@@ -118,7 +118,7 @@ const VoucherTable = ({
           <th className="p-1 border border-slate-400" style={{ width: columnWidths.sno }}>S.No</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.ledger }}>Ledger</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.amount }}>Amount</th>
-          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.type }}>Dr/Cr</th>
+          <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.type }}>D/C</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Dr</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Cr</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Net Amt</th>
@@ -137,14 +137,14 @@ const VoucherTable = ({
                 Div {i + 1}
               </th>
               <th className="p-1 border border-slate-400 text-center" style={{ width: divWidth.type }}>
-                Dr/Cr
+                D/C
               </th>
             </React.Fragment>
           ))}
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Dr</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Total Cr</th>
           <th className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.total }}>Net Amt</th>
-          <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Action</th>
+          <th className="p-1 border border-slate-400" style={{ width: columnWidths.action }}>Act</th>
         </tr>
       );
     }
@@ -289,15 +289,27 @@ const VoucherTable = ({
     );
 
     // Action
+    // Action - Modified to show + on last row, - on other rows
     cells.push(
       <td key="action" className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
-        {rows.length > 1 && (
+        {index === rows.length - 1 ? (
+          // Last row - Show + button to add new row
           <button
-            onClick={() => onRemoveRow(row.id)}
-            className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+            onClick={onAddRow}
+            className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 w-full"
           >
-            Remove
+            +
           </button>
+        ) : (
+          // Other rows - Show - button to remove row (only if more than 1 row)
+          rows.length > 1 && (
+            <button
+              onClick={() => onRemoveRow(row.id)}
+              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 w-full"
+            >
+              -
+            </button>
+          )
         )}
       </td>
     );
@@ -320,47 +332,7 @@ const VoucherTable = ({
               </tr>
             ))}
           </tbody>
-
-          {/* Grand Totals Row */}
-          <tfoot>
-            <tr className="text-[12px] bg-yellow-100 font-bold">
-              <td colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
-                className="p-1 border border-slate-400 text-right">
-                Grand Total:
-              </td>
-              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
-                {formatNumber(grandTotalDr)}
-              </td>
-              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
-                {formatNumber(grandTotalCr)}
-              </td>
-              <td className="p-1 border border-slate-400 text-right" style={{ width: columnWidths.total }}>
-                {formatNumber(grandNetAmt)}
-              </td>
-              <td className="p-1 border border-slate-400" style={{ width: columnWidths.action }}></td>
-            </tr>
-          </tfoot>
         </table>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center p-4 border-t border-gray-300">
-        <button
-          onClick={onAddRow}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-        >
-          + Add Row
-        </button>
-
-        <div className="flex gap-2">
-          <button
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-          >
-            Submit Voucher
-          </button>
-        </div>
       </div>
     </>
   );

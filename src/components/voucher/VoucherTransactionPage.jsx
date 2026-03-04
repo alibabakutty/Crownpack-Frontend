@@ -133,7 +133,7 @@ const VoucherTransactionPage = () => {
     setRows(prev => prev.map(row => {
       if (row.id === rowId) {
         const updatedRow = { ...row, [field]: value };
-        
+
         // Auto-calculate totals
         if (divisionType === 'single') {
           return calculateSingleRowTotals(updatedRow);
@@ -168,7 +168,7 @@ const VoucherTransactionPage = () => {
     for (let i = 1; i <= numDivisions; i++) {
       const amount = parseFloat(row[`d${i}Amount`]) || 0;
       const type = row[`d${i}Type`];
-      
+
       if (type === 'Debit') {
         totalDr += amount;
       } else {
@@ -205,10 +205,29 @@ const VoucherTransactionPage = () => {
     navigate(-1);
   };
 
-  // ========== UPDATED HANDLE SUBMIT ==========
+  // Format number with commas (moved from VoucherTable)
+  const formatNumber = num => {
+    if (!num || isNaN(num)) return '';
+    return parseFloat(num).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Column width configuration (moved from VoucherTable)
+  const columnWidths = {
+    sno: '40px',
+    ledger: '260px',
+    amount: '120px',
+    type: '70px',
+    total: '100px',
+    action: '70px',
+  };
+
   const handleSubmit = async () => {
     console.log('🔵 Submit button clicked!');
     console.log('API Base URL:', api.defaults.baseURL);
+
     // Validation - Check if any rows have ledger selected
     const invalidRows = rows.filter(row => !row.ledgerCode);
     if (invalidRows.length > 0) {
@@ -224,7 +243,6 @@ const VoucherTransactionPage = () => {
         return;
       }
     } else {
-      // For multiple divisions, check if at least one division has amount
       const invalidMultipleRows = rows.filter(row => {
         let hasAmount = false;
         for (let i = 1; i <= numberOfDivisions; i++) {
@@ -235,7 +253,7 @@ const VoucherTransactionPage = () => {
         }
         return !hasAmount;
       });
-      
+
       if (invalidMultipleRows.length > 0) {
         alert('Please enter amount in at least one division for all rows');
         return;
@@ -243,7 +261,6 @@ const VoucherTransactionPage = () => {
     }
 
     // Validation - Check if debit equals credit
-    const { grandTotalDr, grandTotalCr } = calculateGrandTotals();
     if (parseFloat(grandTotalDr) !== parseFloat(grandTotalCr)) {
       alert(`Voucher is not balanced! Debit: ${grandTotalDr}, Credit: ${grandTotalCr}`);
       return;
@@ -258,10 +275,8 @@ const VoucherTransactionPage = () => {
       transactions: rows.map(row => ({
         ledgerCode: row.ledgerCode,
         ledgerName: row.ledgerName,
-        // Single division fields
         amount: row.amount || 0,
         type: row.type || 'Debit',
-        // Multiple division fields
         d1Amount: row.d1Amount || 0,
         d1Type: row.d1Type || 'Debit',
         d2Amount: row.d2Amount || 0,
@@ -272,7 +287,6 @@ const VoucherTransactionPage = () => {
         d4Type: row.d4Type || 'Debit',
         d5Amount: row.d5Amount || 0,
         d5Type: row.d5Type || 'Debit',
-        // Calculated fields
         totalDr: row.totalDr || 0,
         totalCr: row.totalCr || 0,
         netAmt: row.netAmt || 0
@@ -281,32 +295,17 @@ const VoucherTransactionPage = () => {
     };
 
     console.log('Submitting Voucher:', voucherData);
-    
-    // Show loading state
+
     setIsSubmitting(true);
 
     try {
-      // API call to save voucher
       const response = await api.post('http://localhost:7000/vouchers', voucherData);
-      
       console.log('Voucher saved successfully:', response.data);
-      
-      // Show success message
       alert(`Voucher ${voucherNumber} submitted successfully!`);
-      
-      // Reset form or navigate
-      // Option 1: Reset form for new entry
       resetForm();
-      
-      // Option 2: Navigate to voucher list or print page
-      // navigate('/vouchers/list');
-      
     } catch (error) {
       console.error('Error saving voucher:', error);
-      
-      // Show error message
       alert(error.response?.data?.message || 'Failed to submit voucher. Please try again.');
-      
     } finally {
       setIsSubmitting(false);
     }
@@ -314,11 +313,8 @@ const VoucherTransactionPage = () => {
 
   // Reset form to initial state
   const resetForm = () => {
-    // Generate new voucher number
     const nextNum = parseInt(voucherNumber.split('-')[1]) + 1;
     setVoucherNumber(`VCH-${nextNum}`);
-    
-    // Reset rows
     setDivisionType('single');
     setNumberOfDivisions(3);
     initializeRows();
@@ -326,9 +322,9 @@ const VoucherTransactionPage = () => {
 
   return (
     <div className="flex font-amasis">
-      <div className="w-full h-screen border border-gray-600 bg-amber-50">
+      <div className="w-full h-screen border border-gray-600 bg-amber-50 flex flex-col">
         {/* Header */}
-        <div className="">
+        <div>
           <div className="absolute">
             <button
               onClick={handleBack}
@@ -350,7 +346,7 @@ const VoucherTransactionPage = () => {
           </h2>
         </div>
 
-        {/* Controls Header - Simplified */}
+        {/* Controls Header */}
         <div className="flex justify-between items-center px-4 py-2 bg-blue-100 border-b border-gray-300">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -364,7 +360,6 @@ const VoucherTransactionPage = () => {
               />
             </div>
 
-            {/* Division Type Selection - Clean and Simple */}
             <div className="flex items-center gap-4 ml-4">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold">Division Type:</span>
@@ -392,7 +387,6 @@ const VoucherTransactionPage = () => {
                 </label>
               </div>
 
-              {/* Number of Divisions for Multiple Mode */}
               {divisionType === 'multiple' && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">Divisions:</span>
@@ -418,22 +412,59 @@ const VoucherTransactionPage = () => {
           </div>
         </div>
 
-        {/* Transaction Table Component */}
-        <VoucherTable
-          rows={rows}
-          divisionType={divisionType}
-          numberOfDivisions={numberOfDivisions}
-          onAddRow={addNewRow}
-          onRemoveRow={removeRow}
-          onInputChange={handleInputChange}
-          onLedgerChange={handleLedgerChange}
-          ledgerOptions={ledgerOptions}
-          grandTotalDr={grandTotalDr}
-          grandTotalCr={grandTotalCr}
-          grandNetAmt={grandNetAmt}
-          isSubmitting={isSubmitting}
-          onSubmit={handleSubmit}
-        />
+        {/* Scrollable Table Area */}
+        <div className="flex-1 overflow-auto">
+          <VoucherTable
+            rows={rows}
+            divisionType={divisionType}
+            numberOfDivisions={numberOfDivisions}
+            onAddRow={addNewRow}
+            onRemoveRow={removeRow}
+            onInputChange={handleInputChange}
+            onLedgerChange={handleLedgerChange}
+            ledgerOptions={ledgerOptions}
+            grandTotalDr={grandTotalDr}
+            grandTotalCr={grandTotalCr}
+            grandNetAmt={grandNetAmt}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+            hideFooter={true}
+          />
+        </div>
+
+        {/* Sticky Grand Total Footer */}
+        <div className="sticky bottom-0 bg-white border-t-2 border-slate-400 shadow-lg">
+          <table className="w-full border border-slate-400 table-fixed">
+            <tfoot>
+              <tr className="text-[12px] bg-yellow-100">
+                <td
+                  colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
+                  className="p-2 border border-slate-400 text-right font-bold"
+                >
+                  Grand Total:
+                </td>
+                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatNumber(grandTotalDr)}
+                </td>
+                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatNumber(grandTotalCr)}
+                </td>
+                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatNumber(grandNetAmt)}
+                </td>
+                <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+                  >
+                    {isSubmitting ? '...' : 'Submit'}
+                  </button>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   );
