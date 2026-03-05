@@ -179,8 +179,10 @@ const ViewFetchMaster = () => {
 
         const response = await api.get(currentModule.apiEndpoint);
 
-        setData(response.data);
-        setFilteredData(response.data);
+        const result = Array.isArray(response.data) ? response.data : response.data.data || [];
+
+        setData(result);
+        setFilteredData(result);
         setHasFetched(true);
       } catch (error) {
         console.error(`Error fetching ${currentModule.title.toLowerCase()}:`, error);

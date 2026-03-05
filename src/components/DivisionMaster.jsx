@@ -16,7 +16,10 @@ const DivisionMaster = () => {
     useEffect(() => {
         fetch("http://localhost:7000/divisions")
             .then(res => res.json())
-            .then(data => {
+            .then(response => {
+                // normalize response
+                const data = Array.isArray(response) ? response : response.data || [];
+                
                 if (data.length > 0) {
                     const filled = data.map(d => ({
                         id: d.id,

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@font-face {
+/* @font-face {
     font-family: 'Amasis MT Medium';
     src: url('/src/assets/amasis-mt-medium.ttf') format('truetype');
     font-weight: 500;
@@ -11,6 +11,20 @@
 @layer utilities {
     .font-amasis {
         font-family: 'Amasis MT Medium', serif;
+    }
+} */
+
+@font-face {
+    font-family: 'Arial';
+    src: url('/src/assets/arial.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@layer utilities {
+    .font-amasis {
+        font-family: 'Arial', serif;
     }
 }
 

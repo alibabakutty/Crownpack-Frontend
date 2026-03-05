@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 const MainPage = () => {
@@ -49,8 +48,27 @@ const MainPage = () => {
           </div>
         </div>
 
-        {/* Card 3: Settings */}
-        <div className="bg-linear-to-br from-cyan-400 to-white border border-gray-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
+        {/* Card 3: Reports */}
+        <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
+          <h2 className="text-xl font-medium text-gray-800 mb-1">Reports</h2>
+          <div className="space-y-1">
+            <Link
+              to="/voucher-transaction-reports"
+              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+            >
+              Voucher Reports
+            </Link>
+            {/* <Link
+              to="/analytics"
+              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+            >
+              Analytics
+            </Link> */}
+          </div>
+        </div>
+
+        {/* Card 4: Settings */}
+        {/* <div className="bg-linear-to-br from-cyan-400 to-white border border-gray-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
           <h2 className="text-xl font-medium text-gray-800 mb-1">Settings</h2>
           <div className="space-y-1">
             <Link
@@ -66,26 +84,7 @@ const MainPage = () => {
               User Management
             </Link>
           </div>
-        </div>
-
-        {/* Card 4: Reports */}
-        <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
-          <h2 className="text-xl font-medium text-gray-800 mb-1">Reports</h2>
-          <div className="space-y-1">
-            <Link
-              to="/financial-reports"
-              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
-            >
-              Financial Reports
-            </Link>
-            <Link
-              to="/analytics"
-              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
-            >
-              Analytics
-            </Link>
-          </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Company Heading */}

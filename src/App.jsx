@@ -7,9 +7,9 @@ import LedgerConsolidatePage from './components/LedgerConsolidatePage'
 import LedgerConsolidationReport from './components/LedgerConsolidationReport'
 import VoucherTransactionPage from './components/voucher/VoucherTransactionPage'
 import DivisionMaster from './components/DivisionMaster'
+import FetchVoucherTransactions from './components/FetchVoucherTransactions'
 
 function App() {
-  
 
   return (
     <>
@@ -36,6 +36,9 @@ function App() {
               <DivisionMaster />
             }
             />
+            <Route path='/voucher-transaction-reports' element={
+              <FetchVoucherTransactions />
+            } />
           </Routes>
         </BrowserRouter>
       </div>

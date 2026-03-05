@@ -47,14 +47,16 @@ const LedgerConsolidatePage = () => {
     const fetchLedgers = async () => {
       try {
         const response = await api.get('/ledgers');
-        if (Array.isArray(response.data)) {
+        const ledgers = response.data.data || response.data;
+
+        if (Array.isArray(ledgers)) {
           // Get active ledger codes from consolidated data
           const activeLedgerCodes = consolidatedData
             .filter(item => item.status === 'active')
             .map(item => item.ledger_code);
 
           // Filter out ledgers that are already active in consolidation
-          const availableLedgers = response.data.filter(ledger => 
+          const availableLedgers = ledgers.filter(ledger => 
             !activeLedgerCodes.includes(ledger.ledger_code)
           );
 
@@ -78,8 +80,10 @@ const LedgerConsolidatePage = () => {
     const fetchSubGroups = async () => {
       try {
         const response = await api.get('/sub_groups');
-        if (Array.isArray(response.data)) {
-          const formattedSubGroups = response.data.map(subgroup => ({
+        const subgroups = response.data.data || response.data;
+
+        if (Array.isArray(subgroups)) {
+          const formattedSubGroups = subgroups.map(subgroup => ({
             value: subgroup.sub_group_code,
             label: `${subgroup.sub_group_code} - ${subgroup.sub_group_name}`,
             sub_group_code: subgroup.sub_group_code,
@@ -99,8 +103,10 @@ const LedgerConsolidatePage = () => {
     const fetchMainGroups = async () => {
       try {
         const response = await api.get('/main_groups');
-        if (Array.isArray(response.data)) {
-          const formattedMainGroups = response.data.map(mainGroup => ({
+        const maingroups = response.data.data || response.data;
+
+        if (Array.isArray(maingroups)) {
+          const formattedMainGroups = maingroups.map(mainGroup => ({
             value: mainGroup.main_group_code,
             label: `${mainGroup.main_group_code} - ${mainGroup.main_group_name}`,
             main_group_code: mainGroup.main_group_code,

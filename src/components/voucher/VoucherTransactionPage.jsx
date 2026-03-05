@@ -2,18 +2,34 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VoucherTable from './VoucherTable';
 import FetchElements from './FetchElements';
-import api from '../../services/api';
+import { fetchVoucherNumberFromServer } from './voucherUtils';
 
 const VoucherTransactionPage = () => {
-  const [voucherNumber, setVoucherNumber] = useState('VCH-10001');
+  const [voucherNumber, setVoucherNumber] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
-  const [divisionType, setDivisionType] = useState('single'); // 'single' or 'multiple'
-  const [numberOfDivisions, setNumberOfDivisions] = useState(5); // Default 3 for multiple
+  const [divisionType, setDivisionType] = useState('single');
+  const [numberOfDivisions, setNumberOfDivisions] = useState(5);
   const [rows, setRows] = useState([]);
   const [nextRowId, setNextRowId] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { ledgerOptions } = FetchElements();
+
+  const fetchVoucherNumber = async () => {
+
+  const result = await fetchVoucherNumberFromServer();
+
+  console.log("Generated Voucher:", result);
+
+  setVoucherNumber(result.voucherNumber);
+
+};
+
+  useEffect(() => {
+
+    fetchVoucherNumber();
+
+  }, []);
 
   // Initialize rows based on division type
   useEffect(() => {
@@ -217,108 +233,95 @@ const VoucherTransactionPage = () => {
   // Column width configuration (moved from VoucherTable)
   const columnWidths = {
     sno: '40px',
-    ledger: '260px',
+    ledger: '220px',
     amount: '120px',
     type: '70px',
-    total: '100px',
+    total: '150px',
     action: '70px',
   };
 
   const handleSubmit = async () => {
-    console.log('🔵 Submit button clicked!');
-    console.log('API Base URL:', api.defaults.baseURL);
 
-    // Validation - Check if any rows have ledger selected
-    const invalidRows = rows.filter(row => !row.ledgerCode);
-    if (invalidRows.length > 0) {
-      alert('Please select ledger for all rows');
+  console.log("🔵 Submit button clicked!");
+  console.log("Rows:", rows);
+
+  // Ledger validation
+  const invalidRows = rows.filter(row => !row.ledgerCode);
+
+  if (invalidRows.length > 0) {
+    alert("Please select ledger for all rows");
+    return;
+  }
+
+  // Amount validation for single division
+  if (divisionType === "single") {
+
+    const rowsWithoutAmount = rows.filter(
+      row => !row.amount || parseFloat(row.amount) === 0
+    );
+
+    if (rowsWithoutAmount.length > 0) {
+      alert("Please enter amount for all rows");
       return;
     }
+  }
 
-    // Validation - Check if amounts are entered
-    if (divisionType === 'single') {
-      const rowsWithoutAmount = rows.filter(row => !row.amount || parseFloat(row.amount) === 0);
-      if (rowsWithoutAmount.length > 0) {
-        alert('Please enter amount for all rows');
-        return;
-      }
+  console.log("✅ Validation passed");
+
+  // NEW STRUCTURE (simpler)
+  const voucherData = {
+    voucherNumber,
+    dateTime: currentDateTime,
+    transactions: rows
+  };
+
+  console.log("📦 Sending data:", voucherData);
+
+  try {
+
+    const response = await fetch("http://localhost:7000/vouchers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(voucherData)
+    });
+
+    const data = await response.json();
+
+    console.log("📥 Server response:", data);
+
+    if (data.success) {
+
+      alert("✅ Voucher saved successfully");
+
+      await resetForm();
+
     } else {
-      const invalidMultipleRows = rows.filter(row => {
-        let hasAmount = false;
-        for (let i = 1; i <= numberOfDivisions; i++) {
-          if (parseFloat(row[`d${i}Amount`]) > 0) {
-            hasAmount = true;
-            break;
-          }
-        }
-        return !hasAmount;
-      });
 
-      if (invalidMultipleRows.length > 0) {
-        alert('Please enter amount in at least one division for all rows');
-        return;
-      }
+      alert("❌ Failed to save voucher");
+
     }
 
-    // Validation - Check if debit equals credit
-    if (parseFloat(grandTotalDr) !== parseFloat(grandTotalCr)) {
-      alert(`Voucher is not balanced! Debit: ${grandTotalDr}, Credit: ${grandTotalCr}`);
-      return;
-    }
+  } catch (error) {
 
-    // Prepare data for API
-    const voucherData = {
-      voucherNumber,
-      dateTime: currentDateTime,
-      divisionType,
-      numberOfDivisions: divisionType === 'multiple' ? numberOfDivisions : 1,
-      transactions: rows.map(row => ({
-        ledgerCode: row.ledgerCode,
-        ledgerName: row.ledgerName,
-        amount: row.amount || 0,
-        type: row.type || 'Debit',
-        d1Amount: row.d1Amount || 0,
-        d1Type: row.d1Type || 'Debit',
-        d2Amount: row.d2Amount || 0,
-        d2Type: row.d2Type || 'Debit',
-        d3Amount: row.d3Amount || 0,
-        d3Type: row.d3Type || 'Debit',
-        d4Amount: row.d4Amount || 0,
-        d4Type: row.d4Type || 'Debit',
-        d5Amount: row.d5Amount || 0,
-        d5Type: row.d5Type || 'Debit',
-        totalDr: row.totalDr || 0,
-        totalCr: row.totalCr || 0,
-        netAmt: row.netAmt || 0
-      })),
-      totals: calculateGrandTotals()
-    };
+    console.error("❌ API error:", error);
+    alert("Server error while saving voucher");
 
-    console.log('Submitting Voucher:', voucherData);
+  }
 
-    setIsSubmitting(true);
+};
 
-    try {
-      const response = await api.post('http://localhost:7000/vouchers', voucherData);
-      console.log('Voucher saved successfully:', response.data);
-      alert(`Voucher ${voucherNumber} submitted successfully!`);
-      resetForm();
-    } catch (error) {
-      console.error('Error saving voucher:', error);
-      alert(error.response?.data?.message || 'Failed to submit voucher. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const resetForm = async () => {
 
-  // Reset form to initial state
-  const resetForm = () => {
-    const nextNum = parseInt(voucherNumber.split('-')[1]) + 1;
-    setVoucherNumber(`VCH-${nextNum}`);
-    setDivisionType('single');
-    setNumberOfDivisions(3);
-    initializeRows();
-  };
+  await fetchVoucherNumber(); // generate new voucher
+
+  setDivisionType("single");
+  setNumberOfDivisions(5);
+
+  initializeRows();
+
+};
 
   return (
     <div className="flex font-amasis">
@@ -347,23 +350,24 @@ const VoucherTransactionPage = () => {
         </div>
 
         {/* Controls Header */}
-        <div className="flex justify-between items-center px-4 py-2 bg-blue-100 border-b border-gray-300">
+        <div className="flex justify-between items-center px-4 py-1 bg-blue-100 border-b border-gray-300">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">MT.No:</span>
+              <span className="text-xs font-semibold">MT.No:</span>
               <input
                 type="text"
                 value={voucherNumber}
-                onChange={(e) => setVoucherNumber(e.target.value)}
-                className="px-2 py-1 text-sm border border-gray-300 rounded w-32 focus:outline-none focus:border-blue-500"
+                // onChange={(e) => setVoucherNumber(e.target.value)}
+                readOnly
+                className="px-2 py-1 text-xs font-semibold border border-gray-300 rounded w-32 focus:outline-none focus:border-blue-500"
                 placeholder="Voucher No"
               />
             </div>
 
             <div className="flex items-center gap-4 ml-4">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold">Division Type:</span>
-                <label className="flex items-center gap-1 text-sm">
+                <span className="text-xs font-semibold">Division Type:</span>
+                <label className="flex items-center gap-1 text-xs font-semibold">
                   <input
                     type="radio"
                     name="divisionType"
@@ -374,7 +378,7 @@ const VoucherTransactionPage = () => {
                   />
                   <span>Single</span>
                 </label>
-                <label className="flex items-center gap-1 text-sm">
+                <label className="flex items-center gap-1 text-xs font-semibold">
                   <input
                     type="radio"
                     name="divisionType"
@@ -389,11 +393,11 @@ const VoucherTransactionPage = () => {
 
               {divisionType === 'multiple' && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">Divisions:</span>
+                  <span className="text-xs font-semibold">Divisions:</span>
                   <select
                     value={numberOfDivisions}
                     onChange={(e) => setNumberOfDivisions(parseInt(e.target.value))}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded w-16 focus:outline-none focus:border-blue-500"
+                    className="px-1 py-0.5 text-xs border border-gray-300 rounded w-8 focus:outline-none focus:border-blue-500 text-center"
                   >
                     {[2, 3, 4, 5].map(num => (
                       <option key={num} value={num}>{num}</option>
@@ -405,8 +409,8 @@ const VoucherTransactionPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Date & Time:</span>
-            <span className="text-sm bg-white px-3 py-1 border border-gray-300 rounded">
+            <span className="text-xs font-semibold">Date & Time:</span>
+            <span className="text-xs font-semibold bg-white px-3 py-1 border border-gray-300 rounded">
               {currentDateTime}
             </span>
           </div>
@@ -437,6 +441,15 @@ const VoucherTransactionPage = () => {
           <table className="w-full border border-slate-400 table-fixed">
             <tfoot>
               <tr className="text-[12px] bg-yellow-100">
+                <td>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+                  >
+                    {isSubmitting ? '...' : 'Submit'}
+                  </button>
+                </td>
                 <td
                   colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
                   className="p-2 border border-slate-400 text-right font-bold"
@@ -452,15 +465,9 @@ const VoucherTransactionPage = () => {
                 <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
                   {formatNumber(grandNetAmt)}
                 </td>
-                <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
-                  >
-                    {isSubmitting ? '...' : 'Submit'}
-                  </button>
-                </td>
+                {/* <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
+                  
+                </td> */}
               </tr>
             </tfoot>
           </table>
