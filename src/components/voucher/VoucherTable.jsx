@@ -94,7 +94,7 @@ const VoucherTable = ({
       borderRadius: '0',
       minHeight: '16px', // Reduced from 22px
       height: '16px', // Reduced from 22px
-      fontSize: '10px', // Reduced from 11px
+      fontSize: '12px', // Reduced from 11px
       backgroundColor: state.isFocused ? '#fef9c3' : 'white',
       boxShadow: 'none',
       width: '100%',
@@ -102,7 +102,7 @@ const VoucherTable = ({
     }),
     option: (base, state) => ({
       ...base,
-      fontSize: '10px', // Reduced from 11px
+      fontSize: '12px', // Reduced from 11px
       fontWeight: '600',
       padding: '1px 4px', // Reduced from 2px 4px
       backgroundColor: state.isFocused ? '#dbeafe' : 'white',
@@ -110,25 +110,25 @@ const VoucherTable = ({
       borderBottom: '1px solid #e5e7eb',
       minHeight: '14px', // Added to reduce option height
     }),
-    menu: base => ({ 
-      ...base, 
-      fontSize: '10px', // Reduced from 11px
-      zIndex: 9999, 
-      width: '350px' 
+    menu: base => ({
+      ...base,
+      fontSize: '12px', // Reduced from 11px
+      zIndex: 9999,
+      width: '350px'
     }),
-    valueContainer: base => ({ 
-      ...base, 
+    valueContainer: base => ({
+      ...base,
       padding: '0 2px', // Reduced from 0 4px
       height: '16px', // Reduced from 22px
     }),
     singleValue: base => ({
       ...base,
-      fontSize: '10px', // Reduced from 11px
+      fontSize: '12px', // Reduced from 11px
       margin: 0,
     }),
     input: base => ({
       ...base,
-      fontSize: '10px', // Reduced from 11px
+      fontSize: '12px', // Reduced from 11px
       margin: 0,
       padding: 0,
     }),
@@ -137,7 +137,7 @@ const VoucherTable = ({
   };
 
   // UPDATED: Reduced column widths
-  const columnWidths = { 
+  const columnWidths = {
     sno: '30px', // Reduced from 35px
     ledger: '200px', // Reduced from 220px
     amount: '90px', // Reduced from 110px
@@ -165,7 +165,7 @@ const VoucherTable = ({
 
     // S.No
     cells.push(
-      <td key="sno" className={`${cellClass} text-center bg-gray-50 text-[10px]`} style={{ height: '16px' }}>
+      <td key="sno" className={`${cellClass} text-center bg-gray-50 text-[12px]`} style={{ height: '16px' }}>
         {rowIndex + 1}
       </td>
     );
@@ -184,6 +184,25 @@ const VoucherTable = ({
               moveToCell(rowIndex, ledgerIdx + 1);
             }, 50);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Backspace') {
+              // Access the internal input to check if it's empty
+              const inputValue = e.target.value;
+
+              // If the search input is empty, navigate to the previous cell
+              if (!inputValue) {
+                e.preventDefault();
+
+                // Use your logic to determine the previous cell
+                if (rowIndex > 0) {
+                  // Go to the last column of the previous row
+                  const totalCols = getTotalCols();
+                  moveToCell(rowIndex - 1, totalCols - 1);
+                }
+                // If you are in the first row, col 0, do nothing or handle accordingly
+              }
+            }
+          }}
           styles={customStyles}
           isSearchable
           menuPortalTarget={document.body}
@@ -200,7 +219,7 @@ const VoucherTable = ({
           <input
             ref={(el) => (inputRef.current[`${rowIndex}-${amtIdx}`] = el)}
             type="text"
-            className={`${inputClass} text-right`}
+            className={`${inputClass} text-right text-[12px]`}
             value={focusedInput === `${rowIndex}-${amtIdx}`
               ? row.amount
               : formatAsCurrency(row.amount)}
@@ -223,7 +242,7 @@ const VoucherTable = ({
         <td key="typ" className={cellClass} style={{ height: '16px' }}>
           <select
             ref={(el) => (inputRef.current[`${rowIndex}-${typIdx}`] = el)}
-            className={`${inputClass} ${row.type === 'Credit' ? 'text-red-500 text-right' : 'text-left'}`}
+            className={`${inputClass} ${row.type === 'Credit' ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
             value={row.type || 'Debit'}
             onChange={e => onInputChange(row.id, 'type', e.target.value)}
             onKeyDown={e => handleKeyDown(e, rowIndex, typIdx)}
@@ -249,7 +268,7 @@ const VoucherTable = ({
             <input
               ref={(el) => (inputRef.current[`${rowIndex}-${dAmtIdx}`] = el)}
               type="text"
-              className={`${inputClass} text-right ${isCredit ? 'text-red-500' : ''}`}
+              className={`${inputClass} text-right text-[12px] ${isCredit ? 'text-red-500' : ''}`}
               value={focusedInput === `${rowIndex}-${dAmtIdx}`
                 ? row[amountKey]
                 : formatAsCurrency(row[amountKey])}
@@ -279,11 +298,11 @@ const VoucherTable = ({
           <td key={`dt${i}`} className={cellClass} style={{ height: '16px' }}>
             <select
               ref={(el) => (inputRef.current[`${rowIndex}-${dTypIdx}`] = el)}
-              className={`${inputClass} ${isCredit ? 'text-red-500 text-right' : 'text-left'}`}
+              className={`${inputClass} ${isCredit ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
               value={row[typeKey] || 'Debit'}
               onChange={e => onInputChange(row.id, typeKey, e.target.value)}
               onKeyDown={e => handleKeyDown(e, rowIndex, dTypIdx)}
-              style={{ height: '16px' }}
+              // style={{ height: '16px' }}
             >
               <option value="Debit">Dr</option>
               <option value="Credit">Cr</option>
@@ -296,25 +315,25 @@ const VoucherTable = ({
 
     // Totals & Actions
     cells.push(
-      <td key="td" className={`${cellClass} text-[10px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
+      <td key="td" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
         {formatNumber(row.totalDr)}
       </td>
     );
     cells.push(
-      <td key="tc" className={`${cellClass} text-[10px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
+      <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
         {formatNumber(row.totalCr)}
       </td>
     );
-    cells.push(
-      <td key="na" className={`${cellClass} text-[10px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
-        {formatNumber(row.netAmt)}
-      </td>
-    );
+    // cells.push(
+    //   <td key="na" className={`${cellClass} text-[10px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
+    //     {formatNumber(row.netAmt)}
+    //   </td>
+    // );
     cells.push(
       <td key="at" className={`${cellClass} text-center`} style={{ height: '16px' }}>
-        <button 
-          onClick={() => (rowIndex === rows.length - 1 ? onAddRow() : onRemoveRow(row.id))} 
-          className={`rounded text-white text-[9px] ${rowIndex === rows.length - 1 ? 'bg-blue-500' : 'bg-red-400'}`} 
+        <button
+          onClick={() => (rowIndex === rows.length - 1 ? onAddRow() : onRemoveRow(row.id))}
+          className={`rounded text-white text-[9px] ${rowIndex === rows.length - 1 ? 'bg-blue-500' : 'bg-red-400'}`}
           style={{ width: '14px', height: '14px', lineHeight: '14px', padding: 0 }}
         >
           {rowIndex === rows.length - 1 ? '+' : '-'}
@@ -331,25 +350,25 @@ const VoucherTable = ({
         {/* UPDATED: Reduced header heights */}
         <thead className="sticky top-0 bg-violet-200 z-10">
           <tr style={{ height: '20px' }}>
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.sno, height: '20px' }}>S.No</th>
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.ledger, height: '20px' }}>Ledger</th>
+            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.sno, height: '20px' }}>S.No</th>
+            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.ledger, height: '20px' }}>Ledger</th>
             {divisionType === 'single' ? (
               <>
-                <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.amount, height: '20px' }}>Amt</th>
-                <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.type, height: '20px' }}>Dr/Cr</th>
+                <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.amount, height: '20px' }}>Amt</th>
+                <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.type, height: '20px' }}>Dr/Cr</th>
               </>
             ) : (
               [...Array(numberOfDivisions)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: '75px', height: '20px' }}>D{i+1}</th>
-                  <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: '35px', height: '20px' }}>Dr/Cr</th>
+                  <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: '75px', height: '20px' }}>D{i + 1}</th>
+                  <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: '35px', height: '20px' }}>Dr/Cr</th>
                 </React.Fragment>
               ))
             )}
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Dr</th>
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Cr</th>
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Net</th>
-            <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.action, height: '20px' }}>Act</th>
+            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Dr</th>
+            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Cr</th>
+            {/* <th className="p-0 border border-slate-400 text-[9px] font-semibold" style={{ width: columnWidths.total, height: '20px' }}>Net</th> */}
+            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.action, height: '20px' }}>Act</th>
           </tr>
         </thead>
         <tbody>
