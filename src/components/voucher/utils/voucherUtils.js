@@ -57,3 +57,13 @@ export const formatNumber = num => {
     maximumFractionDigits: 2,
   });
 };
+
+export const formatAsCurrency = (val) => {
+    if (val === null || val === undefined || val === "") return "";
+    const num = parseFloat(val);
+    if (isNaN(num)) return "";
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  };
