@@ -44,7 +44,16 @@ export const fetchVoucherNumberFromServer = async () => {
       success: false,
       error: error.message
     };
-
   }
+};
 
+export const formatNumber = num => {
+  if (num === null || num === undefined || num === '') return '';
+  const cleaned = typeof num === 'string' ? num.replace(/,/g, '') : num;
+  const parsed = parseFloat(cleaned);
+  if (isNaN(parsed)) return '';
+  return parsed.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };

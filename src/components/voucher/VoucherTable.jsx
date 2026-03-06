@@ -1,5 +1,6 @@
 import React from 'react';
 import Select from 'react-select';
+import { formatNumber } from './utils/voucherUtils';
 
 const VoucherTable = ({
   rows,
@@ -49,7 +50,7 @@ const VoucherTable = ({
     }),
     menuList: (base) => ({
       ...base,
-      maxHeight: '440px',   // 👈 increase dropdown height
+      maxHeight: '440px',
       paddingTop: 0,
       paddingBottom: 0,
     }),
@@ -103,13 +104,38 @@ const VoucherTable = ({
     type: '32px',
   });
 
-  // Format number with commas AND always show 2 decimals
-  const formatNumber = num => {
-    if (!num || isNaN(num)) return '0.00';
-    return parseFloat(num).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  // Parse amount from formatted string to number
+  const parseAmount = (value) => {
+    if (!value) return 0;
+    const cleaned = value.toString().replace(/,/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // Handle amount change - store raw input value temporarily
+  const handleAmountChange = (rowId, field, value) => {
+    onInputChange(rowId, field, value);
+  };
+
+  // Handle amount blur - parse and format to en-US
+  const handleAmountBlur = (rowId, field, value) => {
+    const numericValue = parseAmount(value);
+    onInputChange(rowId, field, numericValue);
+  };
+
+  const getTypeStyle = (type) => {
+    if (type === "Credit") {
+      return "text-right text-red-600";
+    }
+    return "text-left text-black";
+  };
+
+  // Get display value for amount fields
+  const getAmountDisplayValue = (value) => {
+    if (typeof value === 'number') {
+      return formatNumber(value);
+    }
+    return value || '';
   };
 
   // Generate table headers based on division type
@@ -154,29 +180,6 @@ const VoucherTable = ({
     }
   };
 
-  // Handle amount change with decimal formatting on blur
-  const handleAmountChange = (rowId, field, value) => {
-    // Allow user to type freely
-    onInputChange(rowId, field, value);
-  };
-
-  const handleAmountBlur = (rowId, field, value) => {
-    // Format to 2 decimals when input loses focus
-    if (value) {
-      const numValue = parseFloat(value) || 0;
-      onInputChange(rowId, field, numValue.toFixed(2));
-    } else {
-      onInputChange(rowId, field, '0.00');
-    }
-  };
-
- const getTypeStyle = (type) => {
-  if (type === "Credit") {
-    return "text-right text-red-600";
-  }
-  return "text-left text-black";
-};
-
   // Render a row cell based on column key
   const renderCell = (row, index) => {
     const cells = [];
@@ -215,21 +218,17 @@ const VoucherTable = ({
     );
 
     if (divisionType === 'single') {
-      // Amount with decimal formatting
+      // Amount with en-US formatting
       cells.push(
         <td key="amount" className={cellClass} style={{ width: columnWidths.amount }}>
           <input
-            type="number"
-            value={row.amount || ''}
+            type="text"
+            value={getAmountDisplayValue(row.amount)}
             onChange={e => handleAmountChange(row.id, 'amount', e.target.value)}
             onBlur={e => handleAmountBlur(row.id, 'amount', e.target.value)}
             className={`${inputClass} text-right`}
             placeholder="0.00"
-            step="0.01"
             style={{
-              MozAppearance: 'textfield',
-              appearance: 'textfield',
-              WebkitAppearance: 'none',
               width: '100%',
               height: '18px'
             }}
@@ -256,21 +255,17 @@ const VoucherTable = ({
       // Multiple division fields
       const divWidth = getDivisionColumnWidth();
       for (let i = 1; i <= numberOfDivisions; i++) {
-        // Amount field with decimal formatting
+        // Amount field with en-US formatting
         cells.push(
           <td key={`d${i}Amount`} className={cellClass} style={{ width: divWidth.amount }}>
             <input
-              type="number"
-              value={row[`d${i}Amount`] || ''}
+              type="text"
+              value={getAmountDisplayValue(row[`d${i}Amount`])}
               onChange={e => handleAmountChange(row.id, `d${i}Amount`, e.target.value)}
               onBlur={e => handleAmountBlur(row.id, `d${i}Amount`, e.target.value)}
               className={`${inputClass} text-right`}
               placeholder="0.00"
-              step="0.01"
               style={{
-                MozAppearance: 'textfield',
-                appearance: 'textfield',
-                WebkitAppearance: 'none',
                 width: '100%',
                 height: '18px'
               }}
@@ -296,21 +291,21 @@ const VoucherTable = ({
       }
     }
 
-    // Total Dr - already formatted with 2 decimals
+    // Total Dr - formatted with en-US
     cells.push(
       <td key="totalDr" className={`${cellClass} text-right bg-gray-50 text-[11px] font-semibold`} style={{ width: columnWidths.total }}>
         {formatNumber(row.totalDr)}
       </td>
     );
 
-    // Total Cr - already formatted with 2 decimals
+    // Total Cr - formatted with en-US
     cells.push(
       <td key="totalCr" className={`${cellClass} text-right bg-gray-50 text-[11px] font-semibold`} style={{ width: columnWidths.total }}>
         {formatNumber(row.totalCr)}
       </td>
     );
 
-    // Net Amt - already formatted with 2 decimals
+    // Net Amt - formatted with en-US
     cells.push(
       <td key="netAmt" className={`${cellClass} text-right bg-gray-50 text-[11px] font-semibold`} style={{ width: columnWidths.total }}>
         {formatNumber(row.netAmt)}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VoucherTable from './VoucherTable';
 import FetchElements from './FetchElements';
-import { fetchVoucherNumberFromServer } from './voucherUtils';
+import { fetchVoucherNumberFromServer, formatNumber } from './utils/voucherUtils';
 
 const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('');
@@ -220,15 +220,7 @@ const VoucherTransactionPage = () => {
   const handleBack = () => {
     navigate(-1);
   };
-
-  // Format number with commas (moved from VoucherTable)
-  const formatNumber = num => {
-    if (!num || isNaN(num)) return '';
-    return parseFloat(num).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
+  
 
   // Column width configuration (moved from VoucherTable)
   const columnWidths = {
