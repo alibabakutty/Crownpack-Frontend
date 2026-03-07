@@ -159,10 +159,8 @@ const VoucherTable = ({
 
   const renderRowCells = (row, rowIndex) => {
     const cells = [];
-    // UPDATED: Reduced padding
-    const cellClass = "p-0 border border-slate-400"; // Removed p-0.5, now p-0
-    // UPDATED: Reduced height and padding
-    // Inside renderRowCells
+
+    const cellClass = "p-0 border border-slate-400";
     const inputClass = "w-full px-0.5 py-0 focus:bg-yellow-100 outline-none border-none focus:ring-0 appearance-none bg-transparent text-[10px] font-semibold";
 
     let colIndex = 0;
@@ -219,12 +217,14 @@ const VoucherTable = ({
     if (divisionType === 'single') {
       // Amount (col 1)
       const amtIdx = colIndex;
+      const typeKey = `type`;
+      const isCredit = row[typeKey] === 'Credit';
       cells.push(
         <td key="amt" className={cellClass} style={{ height: '16px' }}>
           <input
             ref={(el) => (inputRef.current[`${rowIndex}-${amtIdx}`] = el)}
             type="text"
-            className={`${inputClass} text-right text-[12px]`}
+            className={`${inputClass} text-right text-[12px] ${isCredit  ? 'text-red-500' : ''}`}
             value={focusedInput === `${rowIndex}-${amtIdx}`
               ? row.amount
               : formatToNaira(row.amount)}
@@ -247,7 +247,7 @@ const VoucherTable = ({
         <td key="typ" className={cellClass} style={{ height: '16px' }}>
           <select
             ref={(el) => (inputRef.current[`${rowIndex}-${typIdx}`] = el)}
-            className={`${inputClass} cursor-pointer ${row.type === 'Credit' ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
+            className={`${inputClass} cursor-pointer ${row.type === 'Credit' ? 'text-red-500 text-center text-[12px]' : 'text-center text-[12px]'}`}
             value={row.type || 'Debit'}
             onChange={e => onInputChange(row.id, 'type', e.target.value)}
             onKeyDown={e => handleKeyDown(e, rowIndex, typIdx)}
@@ -303,7 +303,7 @@ const VoucherTable = ({
           <td key={`dt${i}`} className={cellClass} style={{ height: '16px' }}>
             <select
               ref={(el) => (inputRef.current[`${rowIndex}-${dTypIdx}`] = el)}
-              className={`${inputClass} ${isCredit ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
+              className={`${inputClass} ${isCredit ? 'text-red-500 text-center text-[12px]' : 'text-center text-[12px]'}`}
               value={row[typeKey] || 'Debit'}
               onChange={e => onInputChange(row.id, typeKey, e.target.value)}
               onKeyDown={e => handleKeyDown(e, rowIndex, dTypIdx)}
@@ -320,12 +320,12 @@ const VoucherTable = ({
 
     // Totals & Actions
     cells.push(
-      <td key="td" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
+      <td key="td" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold pr-1`} style={{ height: '16px' }}>
         {formatToNaira(row.totalDr)}
       </td>
     );
     cells.push(
-      <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
+      <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold pr-1`} style={{ height: '16px' }}>
         {formatToNaira(row.totalCr)}
       </td>
     );

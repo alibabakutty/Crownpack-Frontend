@@ -148,7 +148,7 @@ const FetchVoucherTransactions = () => {
         return (
             <li
                 key={index}
-                className={`border-b px-2 py-1 cursor-pointer ${isSelected
+                className={`border-b px-2 py-0.3 cursor-pointer ${isSelected
                     ? 'bg-yellow-100'
                     : 'hover:bg-blue-50'
                     }`}
@@ -196,19 +196,19 @@ const FetchVoucherTransactions = () => {
             <div className="w-full h-screen flex">
 
                 {/* LEFT PANEL */}
-                <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
+                {/* <div className="w-[1%] bg-linear-to-t to-cyan-400 from-[#ccc]">
                     <button
                         onClick={() => navigate(-1)}
                         className="m-3 text-white cursor-pointer"
                     >
                         Back
                     </button>
-                </div>
+                </div> */}
 
                 {/* RIGHT PANEL */}
-                <div className="w-[70%] flex flex-col items-center">
+                <div className="w-full flex flex-col items-center">
 
-                    <div className="w-[955px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
+                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
                         <p className="text-[13px] underline">
                             Voucher Transaction Reports
                         </p>
@@ -224,7 +224,7 @@ const FetchVoucherTransactions = () => {
                         />
                     </div>
 
-                    <div className="w-[955px] border border-gray-600 bg-amber-50">
+                    <div className="w-[1360px] border border-gray-600 bg-amber-50">
 
                         <h2 className="bg-green-800 text-white text-center text-[13px]">
                             List of Voucher Transactions
@@ -239,7 +239,7 @@ const FetchVoucherTransactions = () => {
                         </div>
 
                         <div
-                            className="h-[70vh] overflow-y-auto"
+                            className="h-[82vh] overflow-y-auto"
                             ref={listRef}
                         >
                             <ul>

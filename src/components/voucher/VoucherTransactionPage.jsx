@@ -1,8 +1,10 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import VoucherTable from './VoucherTable';
 import FetchElements from './FetchElements';
 import { fetchVoucherNumberFromServer, formatToNaira } from './utils/voucherUtils';
+import api from '../../services/api';
 
 const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('');
@@ -14,6 +16,10 @@ const VoucherTransactionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { ledgerOptions } = FetchElements();
+  const location = useLocation();
+  const { voucherNumberParam } = useParams();
+  const isUpdateVoucherTransaction = location.pathname.includes('/voucher-transaction-report');
+  const mode = isUpdateVoucherTransaction ? 'update' : 'create';
 
   const updateVoucherNumber = async () => {
     // Assuming you still want to fetch the base from server
@@ -28,12 +34,16 @@ const VoucherTransactionPage = () => {
 
   // Listen for divisionType changes
   useEffect(() => {
-    updateVoucherNumber();
+    if (mode === 'create') {
+      updateVoucherNumber();
+    }
   }, [divisionType]);
 
   // Initialize rows based on division type
   useEffect(() => {
-    initializeRows();
+    if (mode === 'create') {
+      initializeRows();
+    }
   }, [divisionType, numberOfDivisions]);
 
   const initializeRows = () => {
@@ -68,6 +78,80 @@ const VoucherTransactionPage = () => {
     }
     setNextRowId(2);
   };
+
+  useEffect(() => {
+    console.log("DEBUG: Effect Triggered. Mode:", mode, "Param:", voucherNumberParam);
+
+    if (mode !== "update") {
+      console.log("DEBUG: Exiting - Mode is not update");
+      return;
+    }
+
+    if (!voucherNumberParam) {
+      console.log("DEBUG: EXITED - voucherNumberParam is NULL or UNDEFINED");
+      return;
+    }
+
+    const fetchVoucher = async () => {
+      console.log("DEBUG: Fetching data for:", voucherNumberParam);
+      try {
+        const response = await api.get(`/vouchers-by-number/${voucherNumberParam}`);
+        console.log("API RESPONSE FOR UPDATE:", response.data);
+        const data = response.data?.data || [];
+
+        if (data.length > 0) {
+          setVoucherNumber(data[0].voucher_number);
+
+          const firstRow = data[0];
+
+          const isMultiple =
+            parseFloat(firstRow.d2Amount) > 0 ||
+            parseFloat(firstRow.d3Amount) > 0 ||
+            parseFloat(firstRow.d4Amount) > 0 ||
+            parseFloat(firstRow.d5Amount) > 0;
+
+          setDivisionType(isMultiple ? 'multiple' : 'single');
+
+          const mappedRows = data.map((item, index) => {
+            // 1. Common fields for both types
+            const row = {
+              id: index + 1,
+              ledgerCode: item.ledger_code,
+              ledgerName: item.ledger_name,
+              totalDr: item.totalDr,
+              totalCr: item.totalCr,
+              netAmt: item.netAmt
+            };
+
+            // 2. Conditional fields
+            if (isMultiple) {
+              return {
+                ...row,
+                d1Amount: item.d1Amount || '', d1Type: item.d1Type || 'Debit',
+                d2Amount: item.d2Amount || '', d2Type: item.d2Type || 'Debit',
+                d3Amount: item.d3Amount || '', d3Type: item.d3Type || 'Debit',
+                d4Amount: item.d4Amount || '', d4Type: item.d4Type || 'Debit',
+                d5Amount: item.d5Amount || '', d5Type: item.d5Type || 'Debit',
+              };
+            } else {
+              return {
+                ...row,
+                amount: item.d1Amount || '',
+                type: item.d1Type || 'Debit',
+              };
+            }
+          });
+
+          setRows(mappedRows);
+          setNextRowId(mappedRows.length + 1);
+        }
+      } catch (error) {
+        console.error("Voucher fetch error:", error);
+      }
+    };
+
+    fetchVoucher();
+  }, [mode, voucherNumberParam]);
 
   // Set current date and time
   useEffect(() => {
@@ -215,7 +299,23 @@ const VoucherTransactionPage = () => {
     };
   };
 
+  const calculateDivisionTotals = () => {
+
+    const totals = {};
+
+    for (let i = 1; i <= numberOfDivisions; i++) {
+      totals[`d${i}`] = rows.reduce(
+        (sum, row) => sum + (parseFloat(row[`d${i}Amount`]) || 0),
+        0
+      ).toFixed(2);
+    }
+
+    return totals;
+
+  };
+
   const { grandTotalDr, grandTotalCr, grandNetAmt } = calculateGrandTotals();
+  const divisionTotals = calculateDivisionTotals();
 
   const handleBack = () => {
     navigate(-1);
@@ -271,8 +371,14 @@ const VoucherTransactionPage = () => {
 
     try {
 
-      const response = await fetch("http://localhost:7000/vouchers", {
-        method: "POST",
+      const url = mode === 'update'
+        ? `http://localhost:7000/vouchers/${voucherNumber}`
+        : "http://localhost:7000/vouchers";
+
+      const method = mode === "update" ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json"
         },
@@ -285,9 +391,14 @@ const VoucherTransactionPage = () => {
 
       if (data.success) {
 
-        alert("✅ Voucher saved successfully");
+        alert(mode === "update"
+          ? "✅ Voucher updated successfully"
+          : "✅ Voucher saved successfully"
+        );
 
-        await resetForm();
+        if (mode === "create") {
+          await resetForm();
+        }
 
       } else {
 
@@ -312,8 +423,9 @@ const VoucherTransactionPage = () => {
     setNumberOfDivisions(5);
 
     initializeRows();
-
   };
+
+  const divisionWidths = [140, 140, 140, 140, 140, 140];
 
   return (
     <div className="flex font-amasis">
@@ -382,20 +494,6 @@ const VoucherTransactionPage = () => {
                   <span>Multiple</span>
                 </label>
               </div>
-
-              {divisionType === 'multiple' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold">Divisions:</span>
-
-                  <input
-                    type="number"
-                    value={numberOfDivisions}
-                    readOnly
-                    className="px-1 py-0.5 text-xs border border-gray-300 rounded w-8 focus:outline-none text-center bg-gray-100 cursor-not-allowed"
-                  />
-
-                </div>
-              )}
             </div>
           </div>
 
@@ -410,6 +508,7 @@ const VoucherTransactionPage = () => {
         {/* Scrollable Table Area */}
         <div className="flex-1 overflow-auto">
           <VoucherTable
+            key={divisionType}
             rows={rows}
             divisionType={divisionType}
             numberOfDivisions={numberOfDivisions}
@@ -447,15 +546,42 @@ const VoucherTransactionPage = () => {
                 >
                   Grand Total:
                 </td>
+
+                {divisionType === "multiple" && (
+
+                  <>
+                    {Array.from({ length: numberOfDivisions }).map((_, i) => (
+                      <React.Fragment key={i}>
+                        {/* Value Cell */}
+                        <td
+                          style={{ width: `${divisionWidths[i]}px` }}
+                          className="px-2 py-1 border border-slate-400 text-right font-bold"
+                        >
+                          {formatToNaira(divisionTotals[`d${i + 1}`])}
+                        </td>
+
+                        {/* Spacer Cell */}
+                        {i !== numberOfDivisions - 1 && (
+                          <td style={{ width: "10px" }} className="border border-slate-400"></td>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </>
+                )}
+
+                <td className="p-1 border border-slate-400 text-right font-bold">
+                 
+                </td>
+
                 <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
                   {formatToNaira(grandTotalDr)}
                 </td>
                 <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
                   {formatToNaira(grandTotalCr)}
                 </td>
-                <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                {/* <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
                   {formatToNaira(grandNetAmt)}
-                </td>
+                </td> */}
                 {/* <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
                   
                 </td> */}

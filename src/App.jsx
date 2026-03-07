@@ -39,7 +39,7 @@ function App() {
             <Route path='/fetch-voucher-transaction' element={
               <FetchVoucherTransactions />
             } />
-            <Route path='/voucher-transaction-report/:voucher_number' element={
+            <Route path='/voucher-transaction-report/:voucherNumberParam' element={
               <VoucherTransactionPage />
             } />
           </Routes>
