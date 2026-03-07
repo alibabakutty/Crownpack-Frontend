@@ -53,7 +53,7 @@ const MainPage = () => {
           <h2 className="text-xl font-medium text-gray-800 mb-1">Reports</h2>
           <div className="space-y-1">
             <Link
-              to="/voucher-transaction-reports"
+              to="/fetch-voucher-transaction"
               className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Voucher Reports

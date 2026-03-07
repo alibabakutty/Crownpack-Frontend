@@ -292,23 +292,23 @@ const ViewFetchMaster = () => {
       switch (type) {
         case 'main-group':
           return (
-            <div className="grid grid-cols-7 items-center leading-4">
-              <p className="text-[13px] text-gray-800 font-medium">{item.main_group_code}</p>
-              <p className="text-[13px] text-gray-800 font-medium -ml-14">{item.main_group_name}</p>
-              <p className="text-[13px] text-gray-600 ml-20 w-36">
+            <div className="grid grid-cols-7 items-center leading-3">
+              <p className="text-[12px] text-gray-800 font-medium">{item.main_group_code}</p>
+              <p className="text-[12px] text-gray-800 font-medium -ml-14">{item.main_group_name}</p>
+              <p className="text-[12px] text-gray-600 ml-20 w-36">
                 <span>{item.tally_report}</span>
               </p>
-              <p className="text-[13px] text-gray-600 ml-[98px] w-36">
+              <p className="text-[12px] text-gray-600 ml-[98px] w-36">
                 <span>{item.sub_report}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-10 ml-28">
+              <p className="text-[12px] text-gray-600 w-10 ml-28">
                 <span>{item.debit_credit}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-30 ml-[85px]">
+              <p className="text-[12px] text-gray-600 w-30 ml-[85px]">
                 <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <p className='w-16 ml-[73px] text-[13px]'>
+                <p className='w-16 ml-[73px] text-[12px]'>
                   <span className={`px-2`}>{item.status}</span>
                 </p>
               )}
@@ -317,23 +317,23 @@ const ViewFetchMaster = () => {
 
         case 'sub-group':
           return (
-            <div className="grid grid-cols-7 items-center">
-              <p className="text-[13px] text-gray-800 font-medium">{item.sub_group_code}</p>
-              <p className="text-[13px] text-gray-800 font-medium -ml-14">{item.sub_group_name}</p>
-              <p className="text-[13px] text-gray-600 ml-20 w-36">
+            <div className="grid grid-cols-7 items-center leading-3">
+              <p className="text-[12px] text-gray-800 font-medium">{item.sub_group_code}</p>
+              <p className="text-[12px] text-gray-800 font-medium -ml-14">{item.sub_group_name}</p>
+              <p className="text-[12px] text-gray-600 ml-20 w-36">
                 <span>{item.tally_report}</span>
               </p>
-              <p className="text-[13px] text-gray-600 ml-[82px] w-36">
+              <p className="text-[12px] text-gray-600 ml-[82px] w-36">
                 <span>{item.sub_report}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-10 ml-28">
+              <p className="text-[12px] text-gray-600 w-10 ml-28">
                 <span>{item.debit_credit}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-30 ml-[85px]">
+              <p className="text-[12px] text-gray-600 w-30 ml-[85px]">
                 <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <p className='w-16 ml-[73px] text-[13px]'>
+                <p className='w-16 ml-[73px] text-[12px]'>
                   <span className={`px-2`}>{item.status}</span>
                 </p>
               )}
@@ -342,20 +342,20 @@ const ViewFetchMaster = () => {
 
         case 'ledger':
           return (
-            <div className="grid grid-cols-7 items-center">
-              <p className="text-[13px] text-gray-800 font-medium">{item.ledger_code}</p>
-              <p className="text-[13px] text-gray-600 -ml-[76px] w-[280px]">{item.ledger_name}</p>
-              <p className="text-[13px] text-gray-600 w-36 ml-[104px]">
+            <div className="grid grid-cols-7 items-center leading-3">
+              <p className="text-[12px] text-gray-800 font-medium">{item.ledger_code}</p>
+              <p className="text-[12px] text-gray-600 -ml-[76px] w-[280px]">{item.ledger_name}</p>
+              <p className="text-[12px] text-gray-600 w-36 ml-[104px]">
                 <span>{item.tally_report}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-16 ml-32">
+              <p className="text-[12px] text-gray-600 w-16 ml-32">
                 <span>{item.debit_credit}</span>
               </p>
-              <p className="text-[13px] text-gray-600 w-20 ml-32">
+              <p className="text-[12px] text-gray-600 w-20 ml-32">
                 <span>{item.trial_balance}</span>
               </p>
               {item.status && (
-                <p className='w-30 ml-[85px] text-[13px]'>
+                <p className='w-30 ml-[85px] text-[12px]'>
                   <span className={`px-2 ml-10`}>{item.status}</span>
                 </p>
               )}
@@ -372,13 +372,13 @@ const ViewFetchMaster = () => {
         case 'division':
           return (
             <div className="grid grid-cols-4 items-center">
-              <p className="text-[13px] text-gray-800 font-medium">{item.division_code}</p>
-              <p className="text-[13px] text-gray-800 font-medium -ml-8">{item.division_name}</p>
-              <p className="text-[13px] text-gray-600 text-right">
+              <p className="text-[12px] text-gray-800 font-medium">{item.division_code}</p>
+              <p className="text-[12px] text-gray-800 font-medium -ml-8">{item.division_name}</p>
+              <p className="text-[12px] text-gray-600 text-right">
                 <span>{item.report}</span>
               </p>
               {item.status && (
-                <span className={`text-[13px] px-2 mr-1 rounded justify-self-end`}>{item.status}</span>
+                <span className={`text-[12px] px-2 mr-1 rounded justify-self-end`}>{item.status}</span>
               )}
             </div>
           );
@@ -476,7 +476,7 @@ const ViewFetchMaster = () => {
         </div>
         <div className="w-[70%] bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
           <div className="w-[955px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
-            <p className="text-[13px] font-medium underline underline-offset-4 decoration-gray-400 text-gray-700">
+            <p className="text-[12px] font-medium underline underline-offset-4 decoration-gray-400 text-gray-700">
               {formatType(type)} Display
             </p>
             <input
@@ -490,10 +490,10 @@ const ViewFetchMaster = () => {
             />
           </div>
           <div className="w-[955px] h-[89vh] border border-gray-600 bg-amber-50">
-            <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[13px] pl-3">
+            <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[12px] pl-3">
               List of {typeNames[type] || 'Items'}
             </h2>
-            <div className="border border-b-slate-400 flex justify-between px-1 py-0.3 text-[16px]">
+            <div className="border border-b-slate-400 flex justify-between px-1 py-0.3 text-[12px] font-semibold">
               <div>Code</div>
               <div className={` ${type === 'ledger' ? '-ml-60' : '-ml-44'}`}>Name</div>
               {type !== 'division' && (

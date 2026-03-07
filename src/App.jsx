@@ -36,8 +36,11 @@ function App() {
               <DivisionMaster />
             }
             />
-            <Route path='/voucher-transaction-reports' element={
+            <Route path='/fetch-voucher-transaction' element={
               <FetchVoucherTransactions />
+            } />
+            <Route path='/voucher-transaction-report/:voucher_number' element={
+              <VoucherTransactionPage />
             } />
           </Routes>
         </BrowserRouter>

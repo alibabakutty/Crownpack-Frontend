@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
+import { formatToNaira } from './voucher/utils/voucherUtils';
+
+const moduleConfig = {
+    voucher: {
+        title: 'Voucher Transaction',
+        apiEndpoint: '/vouchers',
+        searchPlaceholder: 'Search by Voucher Number...',
+        itemName: 'Vouchers',
+        fields: { number: 'voucher_number', date: 'voucher_data' },
+    }
+};
 
 const FetchVoucherTransactions = () => {
     const { type } = useParams();
@@ -10,69 +21,112 @@ const FetchVoucherTransactions = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [hasFetched, setHasFetched] = useState(false);
-    const [consolidationStatus, setConsolidationStatus] = useState('inactive');
-    const searchInputRef = useRef(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const navigate = useNavigate();
+
+    const searchInputRef = useRef(null);
     const listRef = useRef(null);
+    const navigate = useNavigate();
 
-    // Configuration for different module types
-    const moduleConfig = {
-        'main-group': {
-            title: 'Main Group Items',
-            apiEndpoint: '/main_groups',
-            searchPlaceholder: '',
-            itemName: 'MainGroupNames',
-            fields: {
-                primary: 'main_group_name',
-                code: 'main_group_code',
-                report: 'report',
-                status: 'status',
-            },
-        },
-    };
+    const currentModule = moduleConfig[type || 'voucher'];
 
-    // Get current module configuration
-    const currentModule = moduleConfig[type];
-
+    // Focus search
     useEffect(() => {
-        if (searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
+        if (searchInputRef.current) searchInputRef.current.focus();
     }, []);
 
-    // Keyboard navigation handler
+    // GROUP VOUCHERS
+    const groupVouchers = (rows) => {
+        const grouped = {};
+
+        rows.forEach(row => {
+            if (!grouped[row.voucher_number]) {
+                grouped[row.voucher_number] = {
+                    voucher_number: row.voucher_number,
+                    voucher_date: row.voucher_date,
+                    totalDr: 0,
+                    totalCr: 0,
+                    netAmt: 0,
+                };
+            }
+
+            grouped[row.voucher_number].totalDr += Number(row.totalDr || 0);
+            grouped[row.voucher_number].totalCr += Number(row.totalCr || 0);
+            grouped[row.voucher_number].netAmt += Number(row.netAmt || 0);
+        });
+
+        return Object.values(grouped);
+    };
+
+    // FETCH DATA
+    useEffect(() => {
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get(currentModule.apiEndpoint);
+                const rows = response?.data?.data || [];
+
+                // Log to debug the structure of your response
+                console.log("API RESPONSE:", rows);
+
+                const grouped = groupVouchers(rows);
+
+                setData(grouped);
+                setFilteredData(grouped);
+                setHasFetched(true); // <--- ADD THIS
+            } catch (err) {
+                console.error("Fetch Error:", err);
+                setError("Failed to fetch vouchers");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (!hasFetched) {
+            fetchData();
+        }
+    }, [type, hasFetched]); // Removed currentModule dependency to prevent loop
+
+    // FILTER
+    const filterData = useCallback((list, term) => {
+        if (!term) return list;
+
+        return list.filter(item =>
+            item.voucher_number
+                .toLowerCase()
+                .includes(term.toLowerCase())
+        );
+    }, []);
+
+    useEffect(() => {
+        const filtered = filterData(data, searchTerm);
+        setFilteredData(filtered);
+    }, [searchTerm, data, filterData]);
+
+    // KEYBOARD NAVIGATION
     useEffect(() => {
         const handleKeyDown = e => {
             switch (e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    setSelectedIndex(prev => {
-                        const newIndex = Math.max(0, prev - 1);
-                        scrollToItem(newIndex);
-                        return newIndex;
-                    });
-                    break;
-
                 case 'ArrowDown':
                     e.preventDefault();
-                    setSelectedIndex(prev => {
-                        const newIndex = Math.min(filteredData.length - 1, prev + 1);
-                        scrollToItem(newIndex);
-                        return newIndex;
-                    });
+                    setSelectedIndex(prev =>
+                        Math.min(prev + 1, filteredData.length - 1)
+                    );
                     break;
 
-                case 'Escape':
+                case 'ArrowUp':
                     e.preventDefault();
-                    navigate(-1);
+                    setSelectedIndex(prev => Math.max(prev - 1, 0));
                     break;
 
                 case 'Enter':
-                    e.preventDefault();
                     if (filteredData[selectedIndex]) {
-                        handleItemClick(filteredData[selectedIndex], selectedIndex);
+                        handleItemClick(filteredData[selectedIndex]);
                     }
+                    break;
+
+                case 'Escape':
+                    navigate(-1);
                     break;
 
                 default:
@@ -81,351 +135,119 @@ const FetchVoucherTransactions = () => {
         };
 
         window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [filteredData, selectedIndex, navigate]);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [filteredData, selectedIndex]);
 
-    // Scroll to selected item
-    const scrollToItem = index => {
-        if (listRef.current) {
-            const items = listRef.current.querySelectorAll('li');
-            if (items[index]) {
-                items[index].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                });
-            }
-        }
+    const handleItemClick = item => {
+        navigate(`/voucher-transaction-report/${item.voucher_number}`);
     };
 
-    // Reset selected index when data changes
-    useEffect(() => {
-        setSelectedIndex(0);
-    }, [filteredData]);
-
-    // Filter data function with useCallback to prevent unnecessary re-renders
-    const filterData = useCallback(
-        (dataToFilter, searchValue) => {
-            if (!currentModule || !dataToFilter) return [];
-
-            if (searchValue.trim() === '') {
-                return dataToFilter;
-            } else {
-                return dataToFilter.filter(item => {
-                    return Object.values(currentModule.fields).some(field => {
-                        const value = item[field];
-                        return value && value.toString().toLowerCase().includes(searchValue.toLowerCase());
-                    });
-                });
-            }
-        },
-        [currentModule],
-    );
-
-    // Single useEffect for data fetching
-    useEffect(() => {
-        if (!type || !currentModule || hasFetched) return;
-
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const response = await api.get(currentModule.apiEndpoint);
-
-                const result = Array.isArray(response.data) ? response.data : response.data.data || [];
-
-                setData(result);
-                setFilteredData(result);
-                setHasFetched(true);
-            } catch (error) {
-                console.error(`Error fetching ${currentModule.title.toLowerCase()}:`, error);
-                setError(`Failed to fetch ${currentModule.title.toLowerCase()}`);
-                setData([]);
-                setFilteredData([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [type, currentModule, hasFetched, consolidationStatus]);
-
-    // Filter data based on search term
-    useEffect(() => {
-        if (data.length > 0) {
-            const filtered = filterData(data, searchTerm);
-            setFilteredData(filtered);
-        }
-    }, [searchTerm, data, filterData]);
-
-    const handleSearchChange = e => {
-        setSearchTerm(e.target.value);
-    };
-
-    const handleMasterGroupClick = item => {
-        navigate(`/master-group-view/${item.item_code}`);
-    };
-
-    const handleSubGroupClick = item => {
-        navigate(`/sub-group-view/${item.customer_code}`);
-    };
-
-    const handleLedgerClick = item => {
-        navigate(`/consolidated/ledger/${item.ledger_code}`);
-    };
-
-    const handleDivisionClick = item => {
-        navigate(`/division-view/${item.id}`);
-    };
-
-    // Handle item click based on type
-    const handleItemClick = (item, index) => {
-        setSelectedIndex(index);
-
-        switch (type) {
-            case 'main-group':
-                handleMasterGroupClick(item);
-                break;
-            case 'sub-group':
-                handleSubGroupClick(item);
-                break;
-            case 'ledger':
-                handleLedgerClick(item);
-                break;
-            case 'division':
-                handleDivisionClick(item);
-            default:
-                break;
-        }
-    };
-
-    // Toggle consolidation status
-    const toggleConsolidationStatus = () => {
-        setConsolidationStatus(prev => prev === 'active' ? 'inactive' : 'active');
-        setHasFetched(false);
-        setData([]);
-        setFilteredData([]);
-    };
-
-    // Render list items based on type
     const renderListItem = (item, index) => {
-        if (!currentModule) return null;
-
         const isSelected = index === selectedIndex;
-
-        const getItemContent = () => {
-            switch (type) {
-                case 'main-group':
-                    return (
-                        <div className="grid grid-cols-7 items-center leading-4">
-                            <p className="text-[13px] text-gray-800 font-medium">{item.main_group_code}</p>
-                            <p className="text-[13px] text-gray-800 font-medium -ml-14">{item.main_group_name}</p>
-                            <p className="text-[13px] text-gray-600 ml-20 w-36">
-                                <span>{item.tally_report}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 ml-[98px] w-36">
-                                <span>{item.sub_report}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-10 ml-28">
-                                <span>{item.debit_credit}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-30 ml-[85px]">
-                                <span>{item.trial_balance}</span>
-                            </p>
-                            {item.status && (
-                                <p className='w-16 ml-[73px] text-[13px]'>
-                                    <span className={`px-2`}>{item.status}</span>
-                                </p>
-                            )}
-                        </div>
-                    );
-
-                case 'sub-group':
-                    return (
-                        <div className="grid grid-cols-7 items-center">
-                            <p className="text-[13px] text-gray-800 font-medium">{item.sub_group_code}</p>
-                            <p className="text-[13px] text-gray-800 font-medium -ml-14">{item.sub_group_name}</p>
-                            <p className="text-[13px] text-gray-600 ml-20 w-36">
-                                <span>{item.tally_report}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 ml-[82px] w-36">
-                                <span>{item.sub_report}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-10 ml-28">
-                                <span>{item.debit_credit}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-30 ml-[85px]">
-                                <span>{item.trial_balance}</span>
-                            </p>
-                            {item.status && (
-                                <p className='w-16 ml-[73px] text-[13px]'>
-                                    <span className={`px-2`}>{item.status}</span>
-                                </p>
-                            )}
-                        </div>
-                    );
-
-                case 'ledger':
-                    return (
-                        <div className="grid grid-cols-7 items-center">
-                            <p className="text-[13px] text-gray-800 font-medium">{item.ledger_code}</p>
-                            <p className="text-[13px] text-gray-600 -ml-[76px] w-[280px]">{item.ledger_name}</p>
-                            <p className="text-[13px] text-gray-600 w-36 ml-[104px]">
-                                <span>{item.tally_report}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-16 ml-32">
-                                <span>{item.debit_credit}</span>
-                            </p>
-                            <p className="text-[13px] text-gray-600 w-20 ml-32">
-                                <span>{item.trial_balance}</span>
-                            </p>
-                            {item.status && (
-                                <p className='w-30 ml-[85px] text-[13px]'>
-                                    <span className={`px-2 ml-10`}>{item.status}</span>
-                                </p>
-                            )}
-
-                            {/* Add link_status here for ledger only */}
-                            {item.link_status && (
-                                <p className='w-16 ml-[73px]'>
-                                    <span className={`text-xs px-2 capitalize`}>{item.link_status}</span>
-                                </p>
-                            )}
-                        </div>
-                    );
-
-                case 'division':
-                    return (
-                        <div className="grid grid-cols-4 items-center">
-                            <p className="text-[13px] text-gray-800 font-medium">{item.division_code}</p>
-                            <p className="text-[13px] text-gray-800 font-medium -ml-8">{item.division_name}</p>
-                            <p className="text-[13px] text-gray-600 text-right">
-                                <span>{item.report}</span>
-                            </p>
-                            {item.status && (
-                                <span className={`text-[13px] px-2 mr-1 rounded justify-self-end`}>{item.status}</span>
-                            )}
-                        </div>
-                    );
-
-                default:
-                    return null;
-            }
-        };
 
         return (
             <li
-                key={item.id || item.item_code || index}
-                className={`border-b border-gray-300 px-1.5 py-1 transition-colors cursor-pointer ${isSelected ? 'bg-yellow-100 border-yellow-300' : 'hover:bg-blue-50'
+                key={index}
+                className={`border-b px-2 py-1 cursor-pointer ${isSelected
+                    ? 'bg-yellow-100'
+                    : 'hover:bg-blue-50'
                     }`}
-                onClick={() => handleItemClick(item, index)}
+                onClick={() => handleItemClick(item)}
             >
-                {getItemContent()}
+                <div className="grid grid-cols-5 text-[12px]">
+                    <div className='font-semibold'>{item.voucher_number}</div>
+
+                    <div className='font-semibold pl-4'>
+                        {item.voucher_date.split('-').reverse().join('-')}
+                    </div>
+
+                    <div className="text-right font-semibold">
+                        {formatToNaira(item.totalDr)}
+                    </div>
+
+                    <div className="text-right font-semibold">
+                        {formatToNaira(item.totalCr)}
+                    </div>
+
+                    <div className="text-right font-semibold">
+                        {formatToNaira(item.netAmt)}
+                    </div>
+                </div>
             </li>
         );
     };
 
-    // Main render with stable conditional rendering
-    const renderContent = () => {
-        if (loading && !hasFetched) {
-            return (
-                <div className="h-[70vh] flex items-center justify-center">
-                    <div className="text-gray-500">Loading {currentModule?.title.toLowerCase()}...</div>
-                </div>
-            );
-        }
-
-        if (error) {
-            return (
-                <div className="h-[70vh] flex items-center justify-center">
-                    <div className="text-red-600 text-center">
-                        <p>Error: {error}</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        if (!currentModule) {
-            return (
-                <div className="h-[70vh] flex items-center justify-center">
-                    <div className="text-red-600">Invalid module type</div>
-                </div>
-            );
-        }
-
+    if (loading)
         return (
-            <div className="h-[78vh] overflow-y-auto" ref={listRef}>
-                <div>
-                    {filteredData.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500 text-sm">
-                            {searchTerm ? 'No items match your search.' : `No ${currentModule.itemName} found.`}
-                        </div>
-                    ) : (
-                        <ul className="divide-y divide-gray-300">
-                            {filteredData.map((item, index) => renderListItem(item, index))}
-                        </ul>
-                    )}
-                </div>
+            <div className="p-4 text-center">
+                Loading vouchers...
             </div>
         );
-    };
+
+    if (error)
+        return (
+            <div className="p-4 text-red-500 text-center">
+                {error}
+            </div>
+        );
 
     return (
         <div className="flex font-amasis">
             <div className="w-full h-screen flex">
+
+                {/* LEFT PANEL */}
                 <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
-                    <div className="flex items-center">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg backdrop-blur-sm"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                                />
-                            </svg>
-                            <span className="text-sm font-medium">Back</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="m-3 text-white cursor-pointer"
+                    >
+                        Back
+                    </button>
                 </div>
-                <div className="w-[70%] bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
-                    <div className="w-[955px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
-                        <p className="text-[13px] font-medium underline underline-offset-4 decoration-gray-400 text-gray-700">
+
+                {/* RIGHT PANEL */}
+                <div className="w-[70%] flex flex-col items-center">
+
+                    <div className="w-[955px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
+                        <p className="text-[13px] underline">
                             Voucher Transaction Reports
                         </p>
+
                         <input
-                            type="text"
-                            placeholder={currentModule?.searchPlaceholder || 'Search...'}
-                            value={searchTerm}
                             ref={searchInputRef}
-                            onChange={handleSearchChange}
-                            className="w-[550px] ml-2 mt-2 h-5 capitalize font-medium pl-1 text-sm focus:bg-yellow-200 focus:border focus:border-blue-500 focus:outline-0 relative z-10"
-                            autoComplete="off"
+                            value={searchTerm}
+                            onChange={e =>
+                                setSearchTerm(e.target.value)
+                            }
+                            placeholder="Search voucher..."
+                            className="w-[550px] mt-2 h-5 text-sm border pl-1"
                         />
                     </div>
-                    <div className="w-[955px] h-[89vh] border border-gray-600 bg-amber-50">
-                        <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[13px] pl-3">
+
+                    <div className="w-[955px] border border-gray-600 bg-amber-50">
+
+                        <h2 className="bg-green-800 text-white text-center text-[13px]">
                             List of Voucher Transactions
                         </h2>
-                        <div className="border border-b-slate-400 flex justify-between px-1 py-0.3 text-[16px]">
+
+                        <div className="flex justify-between px-3 text-[12px] font-semibold border-b">
                             <div>VCH-No.</div>
-                            <div>VCH-Date</div>
-                            <div>VCH-Name</div>
-                            <div>Total Debit</div>
+                            <div className='pr-6'>VCH-Date</div>
+                            <div className=''>Total Debit</div>
                             <div>Total Credit</div>
+                            <div>Net Amount</div>
                         </div>
-                        {renderContent()}
+
+                        <div
+                            className="h-[70vh] overflow-y-auto"
+                            ref={listRef}
+                        >
+                            <ul>
+                                {filteredData.map(
+                                    renderListItem
+                                )}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
