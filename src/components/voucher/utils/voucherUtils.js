@@ -1,16 +1,17 @@
 // Client-side fallback (rarely used)
-export const generateClientSideVoucherNumber = () => {
-
+// In your utility file
+export const generateClientSideVoucherNumber = (divisionType) => {
   const today = new Date();
-
   const day = today.getDate().toString().padStart(2, "0");
   const month = (today.getMonth() + 1).toString().padStart(2, "0");
   const year = today.getFullYear().toString().slice(-2);
-
-  // random suffix
+  
   const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
-
-  return `VCH-${day}-${month}-${year}-${randomSuffix}`;
+  
+  // Determine suffix: 'S' for single, 'M' for multiple
+  const typeSuffix = divisionType === 'single' ? 'S' : 'M';
+  
+  return `VCH-${day}-${month}-${year}-${randomSuffix}-${typeSuffix}`;
 };
 
 
@@ -47,23 +48,34 @@ export const fetchVoucherNumberFromServer = async () => {
   }
 };
 
-export const formatNumber = num => {
-  if (num === null || num === undefined || num === '') return '';
-  const cleaned = typeof num === 'string' ? num.replace(/,/g, '') : num;
-  const parsed = parseFloat(cleaned);
-  if (isNaN(parsed)) return '';
-  return parsed.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+// export const formatNumber = num => {
+//   if (num === null || num === undefined || num === '') return '';
+//   const cleaned = typeof num === 'string' ? num.replace(/,/g, '') : num;
+//   const parsed = parseFloat(cleaned);
+//   if (isNaN(parsed)) return '';
+//   return parsed.toLocaleString('en-US', {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   });
+// };
+
+// export const formatAsCurrency = (val) => {
+//   if (val === null || val === undefined || val === "") return "";
+//   const num = parseFloat(val);
+//   if (isNaN(num)) return "";
+//   return new Intl.NumberFormat('en-US', {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   }).format(num);
+// };
+
+export const formatToNaira = (value) => {
+  const num = parseFloat(value) || 0;
+  return `₦ ${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-export const formatAsCurrency = (val) => {
-    if (val === null || val === undefined || val === "") return "";
-    const num = parseFloat(val);
-    if (isNaN(num)) return "";
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
-  };
+// Convert "₦1,000.50" to 1000.5
+export const parseNairaString = (value) => {
+  if (typeof value !== 'string') return value;
+  return parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
+};

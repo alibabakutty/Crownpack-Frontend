@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import Select from 'react-select';
-import { formatAsCurrency, formatNumber } from './utils/voucherUtils';
+import { formatToNaira } from './utils/voucherUtils';
 
 const VoucherTable = ({
   rows,
@@ -90,45 +90,48 @@ const VoucherTable = ({
   const customStyles = {
     control: (base, state) => ({
       ...base,
-      border: '1px solid transparent',
+      border: 'none',
       borderRadius: '0',
-      minHeight: '16px', // Reduced from 22px
-      height: '16px', // Reduced from 22px
-      fontSize: '12px', // Reduced from 11px
-      backgroundColor: state.isFocused ? '#fef9c3' : 'white',
+      minHeight: '16px',
+      height: '16px',
+      fontSize: '12px',
+      backgroundColor: state.isFocused ? '#fef9c4' : 'transparent',
       boxShadow: 'none',
       width: '100%',
-      '&:hover': { border: '1px solid #3b82f6' },
+      '&:hover': { border: 'none', boxShadow: 'none' },
+      '&:focus': { border: 'none', boxShadow: 'none' }
     }),
     option: (base, state) => ({
       ...base,
-      fontSize: '12px', // Reduced from 11px
+      fontSize: '12px',
       fontWeight: '600',
-      padding: '1px 4px', // Reduced from 2px 4px
+      padding: '1px 4px',
       backgroundColor: state.isFocused ? '#dbeafe' : 'white',
       color: 'black',
       borderBottom: '1px solid #e5e7eb',
-      minHeight: '14px', // Added to reduce option height
+      minHeight: '14px',
     }),
     menu: base => ({
       ...base,
-      fontSize: '12px', // Reduced from 11px
+      fontSize: '12px',
       zIndex: 9999,
       width: '350px'
     }),
     valueContainer: base => ({
       ...base,
-      padding: '0 2px', // Reduced from 0 4px
-      height: '16px', // Reduced from 22px
+      padding: '0 2px',
+      height: '16px',
+      border: 'none'
     }),
     singleValue: base => ({
       ...base,
-      fontSize: '12px', // Reduced from 11px
+      fontSize: '12px',
+      fontWeight: '600',
       margin: 0,
     }),
     input: base => ({
       ...base,
-      fontSize: '12px', // Reduced from 11px
+      fontSize: '12px',
       margin: 0,
       padding: 0,
     }),
@@ -159,7 +162,8 @@ const VoucherTable = ({
     // UPDATED: Reduced padding
     const cellClass = "p-0 border border-slate-400"; // Removed p-0.5, now p-0
     // UPDATED: Reduced height and padding
-    const inputClass = "w-full px-0.5 py-0 focus:bg-yellow-100 focus:outline-none text-[10px] font-semibold border border-transparent"; // Reduced text to 10px, minimized padding
+    // Inside renderRowCells
+    const inputClass = "w-full px-0.5 py-0 focus:bg-yellow-100 outline-none border-none focus:ring-0 appearance-none bg-transparent text-[10px] font-semibold";
 
     let colIndex = 0;
 
@@ -205,6 +209,7 @@ const VoucherTable = ({
           }}
           styles={customStyles}
           isSearchable
+          openMenuOnFocus={true}
           menuPortalTarget={document.body}
         />
       </td>
@@ -222,7 +227,7 @@ const VoucherTable = ({
             className={`${inputClass} text-right text-[12px]`}
             value={focusedInput === `${rowIndex}-${amtIdx}`
               ? row.amount
-              : formatAsCurrency(row.amount)}
+              : formatToNaira(row.amount)}
             onFocus={(e) => handleAmountFocus(e, `${rowIndex}-${amtIdx}`)}
             onBlur={(e) => {
               setFocusedInput(null);
@@ -242,7 +247,7 @@ const VoucherTable = ({
         <td key="typ" className={cellClass} style={{ height: '16px' }}>
           <select
             ref={(el) => (inputRef.current[`${rowIndex}-${typIdx}`] = el)}
-            className={`${inputClass} ${row.type === 'Credit' ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
+            className={`${inputClass} cursor-pointer ${row.type === 'Credit' ? 'text-red-500 text-right text-[12px]' : 'text-left text-[12px]'}`}
             value={row.type || 'Debit'}
             onChange={e => onInputChange(row.id, 'type', e.target.value)}
             onKeyDown={e => handleKeyDown(e, rowIndex, typIdx)}
@@ -271,7 +276,7 @@ const VoucherTable = ({
               className={`${inputClass} text-right text-[12px] ${isCredit ? 'text-red-500' : ''}`}
               value={focusedInput === `${rowIndex}-${dAmtIdx}`
                 ? row[amountKey]
-                : formatAsCurrency(row[amountKey])}
+                : formatToNaira(row[amountKey])}
               onFocus={(e) => {
                 setFocusedInput(`${rowIndex}-${dAmtIdx}`);
                 const inputElement = e.target;
@@ -302,7 +307,7 @@ const VoucherTable = ({
               value={row[typeKey] || 'Debit'}
               onChange={e => onInputChange(row.id, typeKey, e.target.value)}
               onKeyDown={e => handleKeyDown(e, rowIndex, dTypIdx)}
-              // style={{ height: '16px' }}
+            style={{ height: '16px' }}
             >
               <option value="Debit">Dr</option>
               <option value="Credit">Cr</option>
@@ -316,12 +321,12 @@ const VoucherTable = ({
     // Totals & Actions
     cells.push(
       <td key="td" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
-        {formatNumber(row.totalDr)}
+        {formatToNaira(row.totalDr)}
       </td>
     );
     cells.push(
       <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold`} style={{ height: '16px' }}>
-        {formatNumber(row.totalCr)}
+        {formatToNaira(row.totalCr)}
       </td>
     );
     // cells.push(

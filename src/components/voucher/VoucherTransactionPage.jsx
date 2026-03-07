@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VoucherTable from './VoucherTable';
 import FetchElements from './FetchElements';
-import { fetchVoucherNumberFromServer, formatNumber } from './utils/voucherUtils';
+import { fetchVoucherNumberFromServer, formatToNaira } from './utils/voucherUtils';
 
 const VoucherTransactionPage = () => {
   const [voucherNumber, setVoucherNumber] = useState('');
@@ -15,21 +15,21 @@ const VoucherTransactionPage = () => {
   const navigate = useNavigate();
   const { ledgerOptions } = FetchElements();
 
-  const fetchVoucherNumber = async () => {
+  const updateVoucherNumber = async () => {
+    // Assuming you still want to fetch the base from server
+    const result = await fetchVoucherNumberFromServer();
 
-  const result = await fetchVoucherNumberFromServer();
+    // Extract base and append your dynamic suffix
+    const baseNumber = result.voucherNumber.split('-').slice(0, -1).join('-');
+    const typeSuffix = divisionType === 'single' ? 'S' : 'M';
 
-  console.log("Generated Voucher:", result);
+    setVoucherNumber(`${baseNumber}-${typeSuffix}`);
+  };
 
-  setVoucherNumber(result.voucherNumber);
-
-};
-
+  // Listen for divisionType changes
   useEffect(() => {
-
-    fetchVoucherNumber();
-
-  }, []);
+    updateVoucherNumber();
+  }, [divisionType]);
 
   // Initialize rows based on division type
   useEffect(() => {
@@ -220,7 +220,7 @@ const VoucherTransactionPage = () => {
   const handleBack = () => {
     navigate(-1);
   };
-  
+
 
   // Column width configuration (moved from VoucherTable)
   const columnWidths = {
@@ -234,86 +234,86 @@ const VoucherTransactionPage = () => {
 
   const handleSubmit = async () => {
 
-  console.log("🔵 Submit button clicked!");
-  console.log("Rows:", rows);
+    console.log("🔵 Submit button clicked!");
+    console.log("Rows:", rows);
 
-  // Ledger validation
-  const invalidRows = rows.filter(row => !row.ledgerCode);
+    // Ledger validation
+    const invalidRows = rows.filter(row => !row.ledgerCode);
 
-  if (invalidRows.length > 0) {
-    alert("Please select ledger for all rows");
-    return;
-  }
-
-  // Amount validation for single division
-  if (divisionType === "single") {
-
-    const rowsWithoutAmount = rows.filter(
-      row => !row.amount || parseFloat(row.amount) === 0
-    );
-
-    if (rowsWithoutAmount.length > 0) {
-      alert("Please enter amount for all rows");
+    if (invalidRows.length > 0) {
+      alert("Please select ledger for all rows");
       return;
     }
-  }
 
-  console.log("✅ Validation passed");
+    // Amount validation for single division
+    if (divisionType === "single") {
 
-  // NEW STRUCTURE (simpler)
-  const voucherData = {
-    voucherNumber,
-    dateTime: currentDateTime,
-    transactions: rows
-  };
+      const rowsWithoutAmount = rows.filter(
+        row => !row.amount || parseFloat(row.amount) === 0
+      );
 
-  console.log("📦 Sending data:", voucherData);
+      if (rowsWithoutAmount.length > 0) {
+        alert("Please enter amount for all rows");
+        return;
+      }
+    }
 
-  try {
+    console.log("✅ Validation passed");
 
-    const response = await fetch("http://localhost:7000/vouchers", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(voucherData)
-    });
+    // NEW STRUCTURE (simpler)
+    const voucherData = {
+      voucherNumber,
+      dateTime: currentDateTime,
+      transactions: rows
+    };
 
-    const data = await response.json();
+    console.log("📦 Sending data:", voucherData);
 
-    console.log("📥 Server response:", data);
+    try {
 
-    if (data.success) {
+      const response = await fetch("http://localhost:7000/vouchers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(voucherData)
+      });
 
-      alert("✅ Voucher saved successfully");
+      const data = await response.json();
 
-      await resetForm();
+      console.log("📥 Server response:", data);
 
-    } else {
+      if (data.success) {
 
-      alert("❌ Failed to save voucher");
+        alert("✅ Voucher saved successfully");
+
+        await resetForm();
+
+      } else {
+
+        alert("❌ Failed to save voucher");
+
+      }
+
+    } catch (error) {
+
+      console.error("❌ API error:", error);
+      alert("Server error while saving voucher");
 
     }
 
-  } catch (error) {
-
-    console.error("❌ API error:", error);
-    alert("Server error while saving voucher");
-
-  }
-
-};
+  };
 
   const resetForm = async () => {
 
-  await fetchVoucherNumber(); // generate new voucher
+    await updateVoucherNumber(); // generate new voucher
 
-  setDivisionType("single");
-  setNumberOfDivisions(5);
+    setDivisionType("single");
+    setNumberOfDivisions(5);
 
-  initializeRows();
+    initializeRows();
 
-};
+  };
 
   return (
     <div className="flex font-amasis">
@@ -351,7 +351,7 @@ const VoucherTransactionPage = () => {
                 value={voucherNumber}
                 // onChange={(e) => setVoucherNumber(e.target.value)}
                 readOnly
-                className="px-2 py-1 text-xs font-semibold border border-gray-300 rounded w-32 focus:outline-none focus:border-blue-500"
+                className="px-2 py-1 text-xs font-semibold border border-gray-300 rounded w-36 focus:outline-none focus:border-blue-500"
                 placeholder="Voucher No"
               />
             </div>
@@ -386,15 +386,14 @@ const VoucherTransactionPage = () => {
               {divisionType === 'multiple' && (
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold">Divisions:</span>
-                  <select
+
+                  <input
+                    type="number"
                     value={numberOfDivisions}
-                    onChange={(e) => setNumberOfDivisions(parseInt(e.target.value))}
-                    className="px-1 py-0.5 text-xs border border-gray-300 rounded w-8 focus:outline-none focus:border-blue-500 text-center"
-                  >
-                    {[2, 3, 4, 5].map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
+                    readOnly
+                    className="px-1 py-0.5 text-xs border border-gray-300 rounded w-8 focus:outline-none text-center bg-gray-100 cursor-not-allowed"
+                  />
+
                 </div>
               )}
             </div>
@@ -429,7 +428,7 @@ const VoucherTransactionPage = () => {
         </div>
 
         {/* Sticky Grand Total Footer */}
-        <div className="sticky bottom-0 bg-white border-t-2 border-slate-400 shadow-lg">
+        <div className="sticky bottom-0 bg-white border-t border-slate-400 shadow-sm">
           <table className="w-full border border-slate-400 table-fixed">
             <tfoot>
               <tr className="text-[12px] bg-yellow-100">
@@ -437,25 +436,25 @@ const VoucherTransactionPage = () => {
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+                    className="px-3 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
                   >
                     {isSubmitting ? '...' : 'Submit'}
                   </button>
                 </td>
                 <td
                   colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
-                  className="p-2 border border-slate-400 text-right font-bold"
+                  className="p-1 border border-slate-400 text-right font-bold"
                 >
                   Grand Total:
                 </td>
-                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
-                  {formatNumber(grandTotalDr)}
+                <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatToNaira(grandTotalDr)}
                 </td>
-                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
-                  {formatNumber(grandTotalCr)}
+                <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatToNaira(grandTotalCr)}
                 </td>
-                <td className="p-2 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
-                  {formatNumber(grandNetAmt)}
+                <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+                  {formatToNaira(grandNetAmt)}
                 </td>
                 {/* <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
                   
