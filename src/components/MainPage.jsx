@@ -5,30 +5,30 @@ const MainPage = () => {
     <div className="min-h-screen bg-linear-to-r from-emerald-50 via-teal-50 to-cyan-400 flex font-amasis">
       <div className="w-[200px] flex flex-col">
         {/* Card 1: Accounting Master */}
-        <div className="bg-linear-to-r from-cyan-400 to-white border border-blue-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-40 mt-5 mb-4">
-          <h2 className="text-xl font-medium text-gray-800 mb-1">Accounting Master</h2>
+        <div className="bg-linear-to-r from-cyan-400 to-white border border-blue-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-36 mt-5 mb-4">
+          <h2 className="text-sm font-medium text-gray-800 mb-1">Accounting Master</h2>
           <div className="space-y-1">
             <Link
               to="/fetch-view-master/main-group"
-              className="block text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Main Group
             </Link>
             <Link
               to="/fetch-view-master/sub-group"
-              className="block text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Sub Group
             </Link>
             <Link
               to="/fetch-view-master/ledger"
-              className="block text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Ledger Name
             </Link>
             <Link
               to="/ledger-consolidate"
-              className="block text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Ledger Consolidate
             </Link>
@@ -36,12 +36,12 @@ const MainPage = () => {
         </div>
 
         {/* Card 2: Division Master */}
-        <div className="bg-linear-to-r from-cyan-400 to-white border border-purple-100 rounded-2xl py-2 px-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-24 mb-4">
-          <h2 className="text-xl font-medium text-gray-800 mb-1">Division Master</h2>
+        <div className="bg-linear-to-r from-cyan-400 to-white border border-purple-100 rounded-2xl py-2 px-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-20 mb-4">
+          <h2 className="text-sm font-medium text-gray-800 mb-1">Division Master</h2>
           <div className="space-y-1">
             <Link
               to="/division-master"
-              className="block text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Division Name
             </Link>
@@ -50,20 +50,26 @@ const MainPage = () => {
 
         {/* Card 3: Reports */}
         <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
-          <h2 className="text-xl font-medium text-gray-800 mb-1">Reports</h2>
+          <h2 className="text-sm font-medium text-gray-800 mb-1">Reports</h2>
           <div className="space-y-1">
             <Link
               to="/fetch-voucher-transaction"
-              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Voucher Reports
             </Link>
-            {/* <Link
+            <Link
               to="/analytics"
-              className="block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+              className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
-              Analytics
-            </Link> */}
+              Trial Balance Report - Single
+            </Link>
+            <Link
+              to="/analytics"
+              className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+            >
+              Trial Balance Report - Multiple
+            </Link>
           </div>
         </div>
 

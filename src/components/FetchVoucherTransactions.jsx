@@ -85,7 +85,7 @@ const FetchVoucherTransactions = () => {
         if (!hasFetched) {
             fetchData();
         }
-    }, [type, hasFetched]); // Removed currentModule dependency to prevent loop
+    }, [currentModule.apiEndpoint, hasFetched]); // Removed currentModule dependency to prevent loop
 
     // FILTER
     const filterData = useCallback((list, term) => {
@@ -101,7 +101,22 @@ const FetchVoucherTransactions = () => {
     useEffect(() => {
         const filtered = filterData(data, searchTerm);
         setFilteredData(filtered);
+        setSelectedIndex(0); // reset selection
     }, [searchTerm, data, filterData]);
+
+    useEffect(() => {
+  const container = listRef.current;
+  if (!container) return;
+
+  const selectedItem = container.children[0]?.children[selectedIndex];
+
+  if (selectedItem) {
+    selectedItem.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth"
+    });
+  }
+}, [selectedIndex]);
 
     // KEYBOARD NAVIGATION
     useEffect(() => {
@@ -109,6 +124,7 @@ const FetchVoucherTransactions = () => {
             switch (e.key) {
                 case 'ArrowDown':
                     e.preventDefault();
+                    if (filteredData.length === 0) return;
                     setSelectedIndex(prev =>
                         Math.min(prev + 1, filteredData.length - 1)
                     );
@@ -136,7 +152,7 @@ const FetchVoucherTransactions = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [filteredData, selectedIndex]);
+    }, [filteredData, selectedIndex, navigate]);
 
     const handleItemClick = item => {
         navigate(`/voucher-transaction-report/${item.voucher_number}`);
@@ -148,28 +164,36 @@ const FetchVoucherTransactions = () => {
         return (
             <li
                 key={index}
-                className={`border-b px-2 py-0.3 cursor-pointer ${isSelected
+                className={`border-b py-0.3 cursor-pointer ${isSelected
                     ? 'bg-yellow-100'
                     : 'hover:bg-blue-50'
                     }`}
                 onClick={() => handleItemClick(item)}
             >
-                <div className="grid grid-cols-5 text-[12px]">
-                    <div className='font-semibold'>{item.voucher_number}</div>
+                <div className="flex text-[12px]">
+                    <div className='font-semibold w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
 
-                    <div className='font-semibold pl-4'>
-                        {item.voucher_date.split('-').reverse().join('-')}
+                    <div className='font-semibold w-[10%] text-center border border-right border-gray-500'>
+                        {item.voucher_date ? item.voucher_date.split('-').reverse().join('-') : ''}
                     </div>
 
-                    <div className="text-right font-semibold">
+                    <div className='font-semibold w-[10%] border border-right border-gray-500'>
+                        
+                    </div>
+
+                    <div className='font-semibold w-[20%] border border-right border-gray-500'>
+                        
+                    </div>
+
+                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.totalDr)}
                     </div>
 
-                    <div className="text-right font-semibold">
+                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.totalCr)}
                     </div>
 
-                    <div className="text-right font-semibold">
+                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.netAmt)}
                     </div>
                 </div>
@@ -238,12 +262,14 @@ const FetchVoucherTransactions = () => {
                             List of Voucher Transactions
                         </h2>
 
-                        <div className="flex justify-between px-3 text-[12px] font-semibold border-b">
-                            <div>VCH-No.</div>
-                            <div className='pr-6'>VCH-Date</div>
-                            <div className=''>Total Debit</div>
-                            <div>Total Credit</div>
-                            <div>Net Amount</div>
+                        <div className="flex text-[12px] font-semibold border-b">
+                            <div className='w-[15%] text-center border border-gray-500'>VCH-No.</div>
+                            <div className='w-[10%] text-center border border-gray-500'>VCH-Date</div>
+                            <div className='w-[10%] text-center border border-gray-500'>Division</div>
+                            <div className='w-[20%] text-center border border-gray-500'></div>
+                            <div className='w-[15%] text-center border border-gray-500'>Total Debit</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Total Credit</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Net Amount</div>
                         </div>
 
                         <div

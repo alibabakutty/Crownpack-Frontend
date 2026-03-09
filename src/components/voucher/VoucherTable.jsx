@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
 import { formatToNaira } from './utils/voucherUtils';
 
@@ -14,6 +14,18 @@ const VoucherTable = ({
 }) => {
   const [focusedInput, setFocusedInput] = useState(null);
   const inputRef = useRef({});
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    const firstLedger = inputRef.current["0-0"];
+
+    if (firstLedger && firstLedger.focus) {
+      firstLedger.focus();
+    }
+  }, 100);
+
+  return () => clearTimeout(timer);
+}, []);
 
   const getTotalCols = () => {
     return divisionType === 'single' ? 3 : numberOfDivisions * 2 + 1;

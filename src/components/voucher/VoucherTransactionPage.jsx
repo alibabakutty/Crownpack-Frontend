@@ -24,6 +24,18 @@ const VoucherTransactionPage = () => {
   const isVoucherTransactionMultipleCreate = location.pathname.includes('/voucher-transaction-multiple');
 
   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        navigate(-1);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     if (isVoucherTransactionSingleCreate) {
       setDivisionType('single');
     }
@@ -376,6 +388,7 @@ const VoucherTransactionPage = () => {
     const voucherData = {
       voucherNumber,
       dateTime: currentDateTime,
+      divisionType,
       transactions: rows
     };
 
