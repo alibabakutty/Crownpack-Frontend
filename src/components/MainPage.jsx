@@ -101,7 +101,7 @@ const MainPage = () => {
         {/* Import Excel Datas */}
       <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-10 w-[200px] mb-4 ml-36 mt-5">
         <h2 className="text-xl font-medium text-gray-800 mb-1">
-          <Link to="/import-excel-data" className='block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-center'>
+          <Link to="/import-excel-data" className='block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-center'>
             Import Excel Data
           </Link>
           </h2>
@@ -109,8 +109,16 @@ const MainPage = () => {
 
       <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-10 w-[200px] mb-4 ml-36 mt-5">
         <h2 className="text-xl font-medium text-gray-800 mb-1">
-          <Link to="/voucher-transaction" className='block text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-center'>
-            Voucher Transaction
+          <Link to="/voucher-transaction-single" className='block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-center'>
+            Voucher Transaction - Single
+          </Link>
+          </h2>
+      </div>
+
+      <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-10 w-[200px] mb-4 ml-36 mt-5">
+        <h2 className="text-xl font-medium text-gray-800 mb-1">
+          <Link to="/voucher-transaction-multiple" className='block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-center'>
+            Voucher Transaction - Multiple
           </Link>
           </h2>
       </div>

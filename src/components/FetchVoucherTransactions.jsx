@@ -192,19 +192,27 @@ const FetchVoucherTransactions = () => {
         );
 
     return (
-        <div className="flex font-amasis">
+        <div className="flex font-amasis relative">
+            <button
+                onClick={() => navigate(-1)}
+                className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
+            >
+                <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                </svg>
+                Back
+            </button>
             <div className="w-full h-screen flex">
-
-                {/* LEFT PANEL */}
-                {/* <div className="w-[1%] bg-linear-to-t to-cyan-400 from-[#ccc]">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="m-3 text-white cursor-pointer"
-                    >
-                        Back
-                    </button>
-                </div> */}
-
                 {/* RIGHT PANEL */}
                 <div className="w-full flex flex-col items-center">
 

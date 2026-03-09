@@ -29,7 +29,10 @@ function App() {
             <Route path='/consolidated/ledger/:ledger_code' element={
               <LedgerConsolidationReport />
             } />
-            <Route path='/voucher-transaction' element={
+            <Route path='/voucher-transaction-single' element={
+              <VoucherTransactionPage />
+            } />
+            <Route path='/voucher-transaction-multiple' element={
               <VoucherTransactionPage />
             } />
             <Route path='/division-master' element={

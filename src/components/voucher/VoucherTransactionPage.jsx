@@ -20,6 +20,18 @@ const VoucherTransactionPage = () => {
   const { voucherNumberParam } = useParams();
   const isUpdateVoucherTransaction = location.pathname.includes('/voucher-transaction-report');
   const mode = isUpdateVoucherTransaction ? 'update' : 'create';
+  const isVoucherTransactionSingleCreate = location.pathname.includes('/voucher-transaction-single');
+  const isVoucherTransactionMultipleCreate = location.pathname.includes('/voucher-transaction-multiple');
+
+  useEffect(() => {
+    if (isVoucherTransactionSingleCreate) {
+      setDivisionType('single');
+    }
+
+    if (isVoucherTransactionMultipleCreate) {
+      setDivisionType('multiple')
+    }
+  }, [location.pathname]);
 
   const updateVoucherNumber = async () => {
     // Assuming you still want to fetch the base from server
@@ -95,7 +107,7 @@ const VoucherTransactionPage = () => {
     const fetchVoucher = async () => {
       console.log("DEBUG: Fetching data for:", voucherNumberParam);
       try {
-        const response = await api.get(`/vouchers-by-number/${voucherNumberParam}`);
+        const response = await api.get(`/vouchers/${voucherNumberParam}`);
         console.log("API RESPONSE FOR UPDATE:", response.data);
         const data = response.data?.data || [];
 
@@ -328,7 +340,7 @@ const VoucherTransactionPage = () => {
     ledger: '220px',
     amount: '120px',
     type: '70px',
-    total: '150px',
+    total: '120px',
     action: '70px',
   };
 
@@ -478,6 +490,7 @@ const VoucherTransactionPage = () => {
                     value="single"
                     checked={divisionType === 'single'}
                     onChange={(e) => setDivisionType(e.target.value)}
+                    disabled={isVoucherTransactionMultipleCreate}
                     className="cursor-pointer"
                   />
                   <span>Single</span>
@@ -489,6 +502,7 @@ const VoucherTransactionPage = () => {
                     value="multiple"
                     checked={divisionType === 'multiple'}
                     onChange={(e) => setDivisionType(e.target.value)}
+                    disabled={isVoucherTransactionSingleCreate}
                     className="cursor-pointer"
                   />
                   <span>Multiple</span>
@@ -562,14 +576,14 @@ const VoucherTransactionPage = () => {
 
                         {/* Spacer Cell */}
                         {i !== numberOfDivisions - 1 && (
-                          <td style={{ width: "10px" }} className="border border-slate-400"></td>
+                          <td style={{ width: "15px" }} className="border border-slate-400"></td>
                         )}
                       </React.Fragment>
                     ))}
                   </>
                 )}
 
-                <td className="p-1 border border-slate-400 text-right font-bold">
+                <td className="w-[10px] border border-slate-400 text-right font-bold">
                  
                 </td>
 
@@ -585,6 +599,9 @@ const VoucherTransactionPage = () => {
                 {/* <td className="p-1 border border-slate-400 text-center" style={{ width: columnWidths.action }}>
                   
                 </td> */}
+                <td className="w-[28px] border border-slate-400 text-right font-bold">
+                 
+                </td>
               </tr>
             </tfoot>
           </table>

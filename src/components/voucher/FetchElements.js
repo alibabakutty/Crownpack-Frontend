@@ -19,8 +19,10 @@ const FetchElements = () => {
             setLoading(prev => ({ ...prev, divisions: true }));
             try {
                 const response = await api.get('/divisions');
-                if (Array.isArray(response.data)) {
-                    const formattedDivisions = response.data.map(division => ({
+                const divisions = response?.data?.data || [];
+
+                if (Array.isArray(divisions)) {
+                    const formattedDivisions = divisions.map(division => ({
                         value: division.id,
                         label: division.division_name,
                         ...division
@@ -43,8 +45,10 @@ const FetchElements = () => {
             setLoading(prev => ({ ...prev, ledgers: true }));
             try {
                 const response = await api.get('/ledgers');
-                if (Array.isArray(response.data)) {
-                    const formattedLedgers = response.data.map(ledger => ({
+                const ledgers = response?.data?.data || [];
+
+                if (Array.isArray(ledgers)) {
+                    const formattedLedgers = ledgers.map(ledger => ({
                         value: ledger.ledger_code,
                         // label: `${ledger.ledger_code} - ${ledger.ledger_name}`,
                         label: ledger.ledger_name,
@@ -70,8 +74,9 @@ const FetchElements = () => {
             setLoading(prev => ({ ...prev, subgroups: true }));
             try {
                 const response = await api.get('/sub_groups');
-                if (Array.isArray(response.data)) {
-                    const formattedSubGroups = response.data.map(subgroup => ({
+                const subgroups = response?.data?.data || [];
+                if (Array.isArray(subgroups)) {
+                    const formattedSubGroups = subgroups.map(subgroup => ({
                         value: subgroup.sub_group_code,
                         label: `${subgroup.sub_group_code} - ${subgroup.sub_group_name}`,
                         sub_group_code: subgroup.sub_group_code,
@@ -96,8 +101,9 @@ const FetchElements = () => {
             setLoading(prev => ({ ...prev, maingroups: true }));
             try {
                 const response = await api.get('/main_groups');
-                if (Array.isArray(response.data)) {
-                    const formattedMainGroups = response.data.map(maingroup => ({
+                const maingroups = response?.data?.data || [];
+                if (Array.isArray(maingroups)) {
+                    const formattedMainGroups = maingroups.map(maingroup => ({
                         value: maingroup.main_group_code,
                         label: `${maingroup.main_group_code} - ${maingroup.main_group_name}`,
                         main_group_code: maingroup.main_group_code,
