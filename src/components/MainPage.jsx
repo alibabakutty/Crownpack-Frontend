@@ -59,13 +59,13 @@ const MainPage = () => {
               Voucher Reports
             </Link>
             <Link
-              to="/analytics"
+              to="/fetch-single-trial-balance"
               className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Trial Balance Report - Single
             </Link>
             <Link
-              to="/analytics"
+              to="/fetch-multiple-trial-balance"
               className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Trial Balance Report - Multiple

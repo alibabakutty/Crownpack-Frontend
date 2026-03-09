@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
-import { formatToNaira } from './voucher/utils/voucherUtils';
+import api from '../../services/api';
+import { formatToNaira } from '../voucher/utils/voucherUtils';
 
 const moduleConfig = {
     voucher: {
@@ -9,11 +9,11 @@ const moduleConfig = {
         apiEndpoint: '/vouchers',
         searchPlaceholder: 'Search by Voucher Number...',
         itemName: 'Vouchers',
-        fields: { number: 'voucher_number', date: 'voucher_data' },
+        fields: { number: 'voucher_number', date: 'voucher_date', division: 'division_type' },
     }
 };
 
-const FetchVoucherTransactions = () => {
+const FetchMultipleTrialBalance = () => {
     const { type } = useParams();
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -34,29 +34,6 @@ const FetchVoucherTransactions = () => {
         if (searchInputRef.current) searchInputRef.current.focus();
     }, []);
 
-    // GROUP VOUCHERS
-    const groupVouchers = (rows) => {
-        const grouped = {};
-
-        rows.forEach(row => {
-            if (!grouped[row.voucher_number]) {
-                grouped[row.voucher_number] = {
-                    voucher_number: row.voucher_number,
-                    voucher_date: row.voucher_date,
-                    totalDr: 0,
-                    totalCr: 0,
-                    netAmt: 0,
-                };
-            }
-
-            grouped[row.voucher_number].totalDr += Number(row.totalDr || 0);
-            grouped[row.voucher_number].totalCr += Number(row.totalCr || 0);
-            grouped[row.voucher_number].netAmt += Number(row.netAmt || 0);
-        });
-
-        return Object.values(grouped);
-    };
-
     // FETCH DATA
     useEffect(() => {
 
@@ -69,10 +46,12 @@ const FetchVoucherTransactions = () => {
                 // Log to debug the structure of your response
                 console.log("API RESPONSE:", rows);
 
-                const grouped = groupVouchers(rows);
+               const multipleRows = rows.filter(
+                    row => row.division_type?.toLowerCase() === 'multiple'
+               );
 
-                setData(grouped);
-                setFilteredData(grouped);
+                setData(multipleRows);
+                setFilteredData(multipleRows);
                 setHasFetched(true); // <--- ADD THIS
             } catch (err) {
                 console.error("Fetch Error:", err);
@@ -85,18 +64,22 @@ const FetchVoucherTransactions = () => {
         if (!hasFetched) {
             fetchData();
         }
-    }, [currentModule.apiEndpoint, hasFetched]); // Removed currentModule dependency to prevent loop
+    }, [currentModule.apiEndpoint, hasFetched]);
 
-    // FILTER
     const filterData = useCallback((list, term) => {
-        if (!term) return list;
+    if (!term) return list;
 
-        return list.filter(item =>
-            item.voucher_number
-                .toLowerCase()
-                .includes(term.toLowerCase())
-        );
-    }, []);
+    const lowerTerm = term.toLowerCase();
+
+    return list.filter(item =>
+        item.voucher_number?.toLowerCase().includes(lowerTerm) ||
+        item.voucher_date?.includes(lowerTerm) ||
+        item.division_type?.toLowerCase().includes(lowerTerm) ||
+        String(item.totalDr).includes(lowerTerm) ||
+        String(item.totalCr).includes(lowerTerm) ||
+        String(item.netAmt).includes(lowerTerm)
+    );
+}, []);
 
     useEffect(() => {
         const filtered = filterData(data, searchTerm);
@@ -105,18 +88,18 @@ const FetchVoucherTransactions = () => {
     }, [searchTerm, data, filterData]);
 
     useEffect(() => {
-  const container = listRef.current;
-  if (!container) return;
+        const container = listRef.current;
+        if (!container) return;
 
-  const selectedItem = container.children[0]?.children[selectedIndex];
+        const selectedItem = container.children[0]?.children[selectedIndex];
 
-  if (selectedItem) {
-    selectedItem.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth"
-    });
-  }
-}, [selectedIndex]);
+        if (selectedItem) {
+            selectedItem.scrollIntoView({
+                block: "nearest",
+                behavior: "smooth"
+            });
+        }
+    }, [selectedIndex]);
 
     // KEYBOARD NAVIGATION
     useEffect(() => {
@@ -171,30 +154,45 @@ const FetchVoucherTransactions = () => {
                 onClick={() => handleItemClick(item)}
             >
                 <div className="flex text-[12px]">
-                    <div className='font-semibold w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
+                    <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div>
 
-                    <div className='font-semibold w-[10%] text-center border border-right border-gray-500'>
-                        {item.voucher_date ? item.voucher_date.split('-').reverse().join('-') : ''}
+                    <div className='font-semibold w-[11%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+                        {item.ledger_name || ''}
                     </div>
 
-                    <div className='font-semibold w-[10%] border border-right border-gray-500'>
-                        
-                    </div>
+                    {/* <div className='font-semibold w-[6%] border border-right border-gray-500 text-center capitalize'>
+                        {item.division_type || ''}
+                    </div> */}
 
-                    <div className='font-semibold w-[20%] border border-right border-gray-500'>
-                        
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d1Type === 'Debit' ?  formatToNaira(item.d1Amount) : ''}
                     </div>
-
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
-                        {formatToNaira(item.totalDr)}
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d1Type === 'Credit' ? formatToNaira(item.d1Amount) : '' }
                     </div>
-
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
-                        {formatToNaira(item.totalCr)}
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d2Type === 'Debit' ? formatToNaira(item.d2Amount) : ''}
                     </div>
-
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
-                        {formatToNaira(item.netAmt)}
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d2Type === 'Credit' ? formatToNaira(item.d2Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d3Type === 'Debit' ? formatToNaira(item.d3Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d3Type === 'Credit' ? formatToNaira(item.d3Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d4Type === 'Debit' ? formatToNaira(item.d4Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d4Type === 'Credit' ? formatToNaira(item.d4Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d5Type === 'Debit' ? formatToNaira(item.d5Amount) : ''}
+                    </div>
+                    <div className='font-semibold w-[8%] border border-right border-gray-500 text-right pr-0.5'>
+                        {item.d5Type === 'Credit' ? formatToNaira(item.d5Amount) : ''}
                     </div>
                 </div>
             </li>
@@ -242,7 +240,7 @@ const FetchVoucherTransactions = () => {
 
                     <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
                         <p className="text-[13px] underline">
-                            Voucher Transaction Reports
+                            Multiple Trial Balance Reports
                         </p>
 
                         <input
@@ -259,17 +257,46 @@ const FetchVoucherTransactions = () => {
                     <div className="w-[1360px] border border-gray-600 bg-amber-50">
 
                         <h2 className="bg-green-800 text-white text-center text-[13px]">
-                            List of Voucher Transactions
+                            List of Multiple Trial Balance Reports
                         </h2>
 
                         <div className="flex text-[12px] font-semibold border-b">
-                            <div className='w-[15%] text-center border border-gray-500'>VCH-No.</div>
-                            <div className='w-[10%] text-center border border-gray-500'>VCH-Date</div>
-                            <div className='w-[10%] text-center border border-gray-500'>Division</div>
-                            <div className='w-[20%] text-center border border-gray-500'></div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Debit</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Credit</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Amount</div>
+                            <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div>
+                            <div className='w-[11%] text-center border border-gray-500'>Ledger</div>
+                            {/* <div className='w-[6%] text-center border border-gray-500'>Division</div> */}
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D1 (Dr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D1 (Cr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D2 (Dr)
+                            </div>
+                             <div className='w-[8%] text-center border border-gray-500'>
+                                D2 (Cr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D3 (Dr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D3 (Cr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D4 (Dr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D4 (Cr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D5 (Dr)
+                            </div>
+                            <div className='w-[8%] text-center border border-gray-500'>
+                                D5 (Cr)
+                            </div>
+                            <div className='w-[1%] text-center border border-gray-500'>
+                                
+                            </div>
                         </div>
 
                         <div
@@ -289,4 +316,4 @@ const FetchVoucherTransactions = () => {
     );
 };
 
-export default FetchVoucherTransactions;
+export default FetchMultipleTrialBalance;

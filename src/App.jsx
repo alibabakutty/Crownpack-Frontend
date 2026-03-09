@@ -7,7 +7,9 @@ import LedgerConsolidatePage from './components/LedgerConsolidatePage'
 import LedgerConsolidationReport from './components/LedgerConsolidationReport'
 import VoucherTransactionPage from './components/voucher/VoucherTransactionPage'
 import DivisionMaster from './components/DivisionMaster'
-import FetchVoucherTransactions from './components/FetchVoucherTransactions'
+import FetchVoucherTransactions from './components/fetch-reports/FetchVoucherTransactions'
+import FetchSingleTrialBalance from './components/fetch-reports/FetchSingleTrialBalance'
+import FetchMultipleTrialBalance from './components/fetch-reports/FetchMultipleTrialBalance'
 
 function App() {
 
@@ -44,6 +46,12 @@ function App() {
             } />
             <Route path='/voucher-transaction-report/:voucherNumberParam' element={
               <VoucherTransactionPage />
+            } />
+            <Route path='/fetch-single-trial-balance' element={
+              <FetchSingleTrialBalance />
+            } />
+            <Route path='/fetch-multiple-trial-balance' element={
+              <FetchMultipleTrialBalance />
             } />
           </Routes>
         </BrowserRouter>
