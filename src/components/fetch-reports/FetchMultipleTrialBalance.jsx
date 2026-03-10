@@ -153,7 +153,7 @@ const FetchMultipleTrialBalance = () => {
         return (
             <li
                 key={index}
-                className={`border-b py-0.3 cursor-pointer ${isSelected
+                className={`py-0.3 cursor-pointer ${isSelected
                     ? 'bg-yellow-100'
                     : 'hover:bg-blue-50'
                     }`}
@@ -162,7 +162,7 @@ const FetchMultipleTrialBalance = () => {
                 <div className="flex text-[12px]">
                     {/* <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div> */}
 
-                    <div className='font-semibold w-[35%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+                    <div className='w-[35%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
                         {item.ledger_name || ''}
                     </div>
 
@@ -170,43 +170,43 @@ const FetchMultipleTrialBalance = () => {
                         {item.division_type || ''}
                     </div> */}
 
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d1Type === 'Debit' ? formatToNaira(item.d1Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d1Type === 'Credit' ? formatToNaira(item.d1Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d2Type === 'Debit' ? formatToNaira(item.d2Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d2Type === 'Credit' ? formatToNaira(item.d2Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d3Type === 'Debit' ? formatToNaira(item.d3Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d3Type === 'Credit' ? formatToNaira(item.d3Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d4Type === 'Debit' ? formatToNaira(item.d4Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d4Type === 'Credit' ? formatToNaira(item.d4Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d5Type === 'Debit' ? formatToNaira(item.d5Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d5Type === 'Credit' ? formatToNaira(item.d5Amount) : ''}
                     </div>
-                    <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
                         {formatToNaira(item.totalDr)}
                     </div>
-                    <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
                         {formatToNaira(item.totalCr)}
                     </div>
-                    <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
                         {formatToNaira(item.netAmt)}
                     </div>
                 </div>

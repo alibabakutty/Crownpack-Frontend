@@ -173,36 +173,36 @@ const FetchSingleTrialBalance = () => {
         return (
             <li
                 key={index}
-                className={`border-b py-0.3 cursor-pointer ${isSelected
+                className={`py-0.3 cursor-pointer ${isSelected
                     ? 'bg-yellow-100'
                     : 'hover:bg-blue-50'
                     }`}
                 onClick={() => handleItemClick(item)}
             >
                 <div className="flex text-[12px]">
-                    <div className='font-semibold w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
+                    <div className='w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
 
-                    <div className='font-semibold w-[7%] text-center border border-right border-gray-500'>
+                    <div className='w-[7%] text-center border border-right border-gray-500'>
                         {item.voucher_date ? item.voucher_date.split('-').reverse().join('-') : ''}
                     </div>
 
-                    <div className='font-semibold w-[7%] border border-right border-gray-500 text-center capitalize'>
+                    <div className='w-[7%] border border-right border-gray-500 text-center capitalize'>
                         {item.division_type || ''}
                     </div>
 
-                    <div className='font-semibold w-[26%] border border-right border-gray-500'>
+                    <div className='w-[26%] border border-right border-gray-500'>
 
                     </div>
 
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.totalDr)}
                     </div>
 
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.totalCr)}
                     </div>
 
-                    <div className="text-right font-semibold w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
                         {formatToNaira(item.netAmt)}
                     </div>
                 </div>

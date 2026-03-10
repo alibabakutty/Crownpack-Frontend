@@ -200,7 +200,7 @@ const FetchTrialBalanceByLedger = () => {
     return (
       <li
         key={index}
-        className={`border-b py-0.3 cursor-pointer ${isSelected
+        className={`py-0.3 cursor-pointer ${isSelected
           ? 'bg-yellow-100'
           : 'hover:bg-blue-50'
           }`}
@@ -209,16 +209,16 @@ const FetchTrialBalanceByLedger = () => {
         <div className="flex text-[12px]">
           {/* <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div> */}
 
-          <div className='font-semibold w-[35%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+          <div className=' w-[47%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
             {item.ledger_name || ''}
           </div>
-          <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
             {formatToNaira(item.totalDr)}
           </div>
-          <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
             {formatToNaira(item.totalCr)}
           </div>
-          <div className='font-semibold w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
             {formatToNaira(item.netAmt)}
           </div>
         </div>
@@ -290,7 +290,7 @@ const FetchTrialBalanceByLedger = () => {
 
               <div className="flex text-[12px] font-semibold border-b">
                 {/* <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div> */}
-                <div className='w-[35%] text-center border border-gray-500'>Ledger</div>
+                <div className='w-[47%] text-center border border-gray-500'>Ledger</div>
                 <div className='w-[18%] text-center border border-gray-500'>
                   Total (Dr)
                 </div>
