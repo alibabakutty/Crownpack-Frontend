@@ -49,7 +49,7 @@ const MainPage = () => {
         </div>
 
         {/* Card 3: Reports */}
-        <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 mb-4">
+        <div className="bg-linear-to-r from-cyan-400 to-white border border-indigo-100 rounded-2xl px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-40 mb-4">
           <h2 className="text-sm font-medium text-gray-800 mb-1">Reports</h2>
           <div className="space-y-1">
             <Link
@@ -69,6 +69,18 @@ const MainPage = () => {
               className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
             >
               Trial Balance Report - Multiple
+            </Link>
+            <Link
+              to="/fetch-trial-balance-by-ledger"
+              className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+            >
+              Trial Balance Report - Ledger
+            </Link>
+            <Link
+              to="/fetch-multiple-trial-balance"
+              className="block text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 py-0.5 px-1 rounded-lg transition-all duration-200 text-right"
+            >
+              Trial Balance Report - Division
             </Link>
           </div>
         </div>

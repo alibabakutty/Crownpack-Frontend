@@ -3,18 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { formatToNaira } from '../voucher/utils/voucherUtils';
 
-const moduleConfig = {
-    voucher: {
-        title: 'Voucher Transaction',
-        apiEndpoint: '/vouchers',
-        searchPlaceholder: 'Search by Voucher Number...',
-        itemName: 'Vouchers',
-        fields: { number: 'voucher_number', date: 'voucher_date', division: 'division_type' },
-    }
-};
-
-const FetchMultipleTrialBalance = () => {
-    const { type } = useParams();
+const SecondaryFetchLedger = () => {
+    const { ledger } = useParams();
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -22,12 +12,11 @@ const FetchMultipleTrialBalance = () => {
     const [error, setError] = useState(null);
     const [hasFetched, setHasFetched] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
-
     const searchInputRef = useRef(null);
     const listRef = useRef(null);
     const navigate = useNavigate();
 
-    const currentModule = moduleConfig[type || 'voucher'];
+    const decodedLedger = decodeURIComponent(ledger);
 
     // Focus search
     useEffect(() => {
@@ -40,18 +29,14 @@ const FetchMultipleTrialBalance = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(currentModule.apiEndpoint);
+                const response = await api.get(`vouchers/ledger/${ledger}`);
                 const rows = response?.data?.data || [];
-
-                // Log to debug the structure of your response
                 console.log("API RESPONSE:", rows);
 
-                const multipleRows = rows.filter(
-                    row => row.division_type?.toLowerCase() === 'multiple'
-                );
+                // const ledgerGrouped = groupByLedger(rows);
 
-                setData(multipleRows);
-                setFilteredData(multipleRows);
+                setData(rows);
+                setFilteredData(rows);
                 setHasFetched(true); // <--- ADD THIS
             } catch (err) {
                 console.error("Fetch Error:", err);
@@ -64,7 +49,7 @@ const FetchMultipleTrialBalance = () => {
         if (!hasFetched) {
             fetchData();
         }
-    }, [currentModule.apiEndpoint, hasFetched]);
+    }, [ledger, hasFetched]);
 
     const filterData = useCallback((list, term) => {
         if (!term) return list;
@@ -143,8 +128,12 @@ const FetchMultipleTrialBalance = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [filteredData, selectedIndex, navigate]);
 
-    const handleItemClick = item => {
-        navigate(`/voucher-transaction-report/${item.voucher_number}`);
+    const handleItemClick = (item) => {
+
+        const ledger = encodeURIComponent(item.ledger_name);
+
+        navigate(`/vouchers/ledger/${ledger}`)
+
     };
 
     const renderListItem = (item, index) => {
@@ -165,11 +154,9 @@ const FetchMultipleTrialBalance = () => {
                     <div className='font-semibold w-[35%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
                         {item.ledger_name || ''}
                     </div>
-
-                    {/* <div className='font-semibold w-[6%] border border-right border-gray-500 text-center capitalize'>
-                        {item.division_type || ''}
-                    </div> */}
-
+                    <div className='font-semibold w-[16%] border border-right border-gray-500 text-center pr-0.5 capitalize'>
+                        {item.division_type}
+                    </div>
                     <div className='font-semibold w-[16%] border border-right border-gray-500 text-right pr-0.5'>
                         {item.d1Type === 'Debit' ? formatToNaira(item.d1Amount) : ''}
                     </div>
@@ -255,7 +242,7 @@ const FetchMultipleTrialBalance = () => {
 
                     <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
                         <p className="text-[13px] underline font-semibold">
-                            Multiple Trial Balance Reports
+                            Trial Balance - {decodedLedger}
                         </p>
 
                         <input
@@ -273,13 +260,15 @@ const FetchMultipleTrialBalance = () => {
 
                         <div className='min-w-[1750px]'>
                             <h2 className="bg-green-800 text-white text-center text-[13px]">
-                                List of Multiple Trial Balance Reports
+                                List of Trial Balance Reports - Ledger
                             </h2>
 
                             <div className="flex text-[12px] font-semibold border-b">
                                 {/* <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div> */}
                                 <div className='w-[35%] text-center border border-gray-500'>Ledger</div>
-                                {/* <div className='w-[6%] text-center border border-gray-500'>Division</div> */}
+                                <div className='w-[16%] text-center border border-gray-500'>
+                                    Division Type
+                                </div>
                                 <div className='w-[16%] text-center border border-gray-500'>
                                     D1 (Dr)
                                 </div>
@@ -339,4 +328,4 @@ const FetchMultipleTrialBalance = () => {
     );
 };
 
-export default FetchMultipleTrialBalance;
+export default SecondaryFetchLedger;

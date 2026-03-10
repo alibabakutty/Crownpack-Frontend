@@ -10,6 +10,8 @@ import DivisionMaster from './components/DivisionMaster'
 import FetchVoucherTransactions from './components/fetch-reports/FetchVoucherTransactions'
 import FetchSingleTrialBalance from './components/fetch-reports/FetchSingleTrialBalance'
 import FetchMultipleTrialBalance from './components/fetch-reports/FetchMultipleTrialBalance'
+import FetchTrialBalanceByLedger from './components/fetch-reports/FetchTrialBalanceByLedger'
+import SecondaryFetchLedger from './components/fetch-reports/SecondaryFetchLedger'
 
 function App() {
 
@@ -53,7 +55,18 @@ function App() {
             <Route path='/fetch-multiple-trial-balance' element={
               <FetchMultipleTrialBalance />
             } />
+            <Route path='/fetch-trial-balance-by-ledger' element={
+              <FetchTrialBalanceByLedger />
+            } />
+            <Route
+              path="/secondary-fetch-ledger/:ledger"
+              element={<SecondaryFetchLedger />}
+            />
+            <Route path='vouchers/ledger/:ledger' element={
+              <VoucherTransactionPage />
+            } />
           </Routes>
+          
         </BrowserRouter>
       </div>
     </>
