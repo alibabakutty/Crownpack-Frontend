@@ -13,18 +13,27 @@ const VoucherTransactionPage = () => {
   const [rows, setRows] = useState([]);
   const [nextRowId, setNextRowId] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [voucherList, setVoucherList] = useState([]); // For ledger mode - list of voucher numbers
+  const [voucherList, setVoucherList] = useState([]);
   const [currentVoucherIndex, setCurrentVoucherIndex] = useState(0);
-  const [searchLedger, setSearchLedger] = useState(''); // Store the ledger we're searching for
+  const [searchLedger, setSearchLedger] = useState('');
   const navigate = useNavigate();
   const { ledgerOptions } = FetchElements();
   const location = useLocation();
   const { voucherNumberParam, ledger } = useParams();
-  
-  // Determine the mode
-  const mode = voucherNumberParam ? "voucher" : ledger ? "ledger" : 'create';
-  const isVoucherTransactionSingleCreate = location.pathname.includes('/voucher-transaction-single');
-  const isVoucherTransactionMultipleCreate = location.pathname.includes('/voucher-transaction-multiple');
+
+  const path = location.pathname;
+
+  const isCreatePage =
+    path.includes('/voucher-transaction-single') ||
+    path.includes('/voucher-transaction-multiple');
+
+  const isUpdatePage =
+    path.includes('/fetch-voucher-update');
+
+  const isLedgerPage = path.includes('/vouchers/ledger') ||
+    path.includes('/secondary-fetch-ledger');
+
+  const mode = isCreatePage ? "create" : isUpdatePage ? "update" : isLedgerPage ? "ledger" : "view";
 
   // Handle Escape key
   useEffect(() => {
@@ -41,13 +50,13 @@ const VoucherTransactionPage = () => {
 
   // Set division type based on path
   useEffect(() => {
-    if (isVoucherTransactionSingleCreate) {
+    if (path.includes('/voucher-transaction-single')) {
       setDivisionType('single');
     }
-    if (isVoucherTransactionMultipleCreate) {
+    if (path.includes('/voucher-transaction-multiple')) {
       setDivisionType('multiple');
     }
-  }, [isVoucherTransactionSingleCreate, isVoucherTransactionMultipleCreate]);
+  }, [path]);
 
   // Fetch voucher number
   const updateVoucherNumber = async () => {
@@ -66,6 +75,7 @@ const VoucherTransactionPage = () => {
     if (mode === 'create') {
       updateVoucherNumber();
     }
+    console.log("Now What is the Mode:", mode);
   }, [divisionType, mode]);
 
   // Initialize rows
@@ -111,51 +121,63 @@ const VoucherTransactionPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Case 1: Fetch specific voucher by number
-        if (mode === "voucher" && voucherNumberParam) {
+
+        // CASE 1: View or Update a specific voucher
+        if ((mode === "view" || mode === "update") && voucherNumberParam) {
+
           const res = await api.get(`/vouchers/${voucherNumberParam}`);
           const data = res.data?.data || [];
-          
+
           if (data.length > 0) {
+
             setVoucherNumber(data[0].voucher_number);
-            
-            // Determine if it's multiple division
-            const isMultiple = data.some(item => 
+
+            const isMultiple = data.some(item =>
               parseFloat(item.d2Amount) > 0 ||
               parseFloat(item.d3Amount) > 0 ||
               parseFloat(item.d4Amount) > 0 ||
               parseFloat(item.d5Amount) > 0
             );
-            
-            setDivisionType(isMultiple ? 'multiple' : 'single');
+
+            setDivisionType(isMultiple ? "multiple" : "single");
 
             const mappedRows = data.map((item, index) => {
-              const row = {
+
+              const baseRow = {
                 id: index + 1,
                 ledgerCode: item.ledger_code,
                 ledgerName: item.ledger_name,
-                ledgerData: { value: item.ledger_code, ledger_name: item.ledger_name },
-                totalDr: item.totalDr || '0.00',
-                totalCr: item.totalCr || '0.00',
-                netAmt: item.netAmt || '0.00'
+                ledgerData: {
+                  value: item.ledger_code,
+                  ledger_name: item.ledger_name
+                },
+                totalDr: item.totalDr || "0.00",
+                totalCr: item.totalCr || "0.00",
+                netAmt: item.netAmt || "0.00"
               };
 
               if (isMultiple) {
                 return {
-                  ...row,
-                  d1Amount: item.d1Amount || '', d1Type: item.d1Type || 'Debit',
-                  d2Amount: item.d2Amount || '', d2Type: item.d2Type || 'Debit',
-                  d3Amount: item.d3Amount || '', d3Type: item.d3Type || 'Debit',
-                  d4Amount: item.d4Amount || '', d4Type: item.d4Type || 'Debit',
-                  d5Amount: item.d5Amount || '', d5Type: item.d5Type || 'Debit',
-                };
-              } else {
-                return {
-                  ...row,
-                  amount: item.d1Amount || '',
-                  type: item.d1Type || 'Debit',
+                  ...baseRow,
+                  d1Amount: item.d1Amount || "",
+                  d1Type: item.d1Type || "Debit",
+                  d2Amount: item.d2Amount || "",
+                  d2Type: item.d2Type || "Debit",
+                  d3Amount: item.d3Amount || "",
+                  d3Type: item.d3Type || "Debit",
+                  d4Amount: item.d4Amount || "",
+                  d4Type: item.d4Type || "Debit",
+                  d5Amount: item.d5Amount || "",
+                  d5Type: item.d5Type || "Debit",
                 };
               }
+
+              return {
+                ...baseRow,
+                amount: item.d1Amount || "",
+                type: item.d1Type || "Debit",
+              };
+
             });
 
             setRows(mappedRows);
@@ -163,16 +185,19 @@ const VoucherTransactionPage = () => {
           }
         }
 
-        // Case 2: Fetch ALL vouchers that contain this ledger
+        // CASE 2: Ledger search (find all vouchers containing ledger)
         if (mode === "ledger" && ledger) {
-          setSearchLedger(ledger);
-          const res = await api.get(`/vouchers/ledger/${ledger}`);
+          const decodedLedger = decodeURIComponent(ledger);
+
+          setSearchLedger(decodedLedger);
+
+          const res = await api.get(`/vouchers/ledger/${encodeURIComponent(decodedLedger)}`);
           const data = res.data?.data || [];
-          
+
           if (data.length > 0) {
-            // Group by voucher number to get unique vouchers
+
             const voucherMap = new Map();
-            
+
             data.forEach(item => {
               if (!voucherMap.has(item.voucher_number)) {
                 voucherMap.set(item.voucher_number, []);
@@ -180,22 +205,24 @@ const VoucherTransactionPage = () => {
               voucherMap.get(item.voucher_number).push(item);
             });
 
-            // Get unique voucher numbers
             const uniqueVoucherNumbers = Array.from(voucherMap.keys());
+
             setVoucherList(uniqueVoucherNumbers);
-            
-            // Load the first voucher's complete transaction
+
             if (uniqueVoucherNumbers.length > 0) {
+              setCurrentVoucherIndex(0);
               await loadCompleteVoucher(uniqueVoucherNumbers[0]);
             }
           }
         }
+
       } catch (error) {
         console.error("Fetch error:", error);
       }
     };
 
     fetchData();
+
   }, [voucherNumberParam, ledger, mode]);
 
   // Function to load complete voucher transaction
@@ -203,18 +230,18 @@ const VoucherTransactionPage = () => {
     try {
       const res = await api.get(`/vouchers/${voucherNum}`);
       const data = res.data?.data || [];
-      
+
       if (data.length > 0) {
         setVoucherNumber(data[0].voucher_number);
-        
+
         // Determine if it's multiple division
-        const isMultiple = data.some(item => 
+        const isMultiple = data.some(item =>
           parseFloat(item.d2Amount) > 0 ||
           parseFloat(item.d3Amount) > 0 ||
           parseFloat(item.d4Amount) > 0 ||
           parseFloat(item.d5Amount) > 0
         );
-        
+
         setDivisionType(isMultiple ? 'multiple' : 'single');
 
         const mappedRows = data.map((item, index) => {
@@ -294,8 +321,8 @@ const VoucherTransactionPage = () => {
 
   // Add new row
   const addNewRow = () => {
-    if (mode !== 'create') return;
-    
+    if (mode === 'view') return;
+
     const newRowId = nextRowId;
     const baseRow = {
       id: newRowId,
@@ -329,8 +356,8 @@ const VoucherTransactionPage = () => {
 
   // Remove row
   const removeRow = (rowId) => {
-    if (mode !== 'create') return;
-    
+    if (mode === 'view') return;
+
     if (rows.length > 1) {
       setRows(prev => prev.filter(row => row.id !== rowId));
     }
@@ -338,8 +365,8 @@ const VoucherTransactionPage = () => {
 
   // Handle ledger selection
   const handleLedgerChange = (rowId, selectedOption) => {
-    if (mode !== 'create') return;
-    
+    if (mode === 'view') return;
+
     setRows(prev => prev.map(row => {
       if (row.id === rowId) {
         return {
@@ -355,8 +382,8 @@ const VoucherTransactionPage = () => {
 
   // Handle input changes
   const handleInputChange = (rowId, field, value) => {
-    if (mode !== 'create') return;
-    
+    if (mode === 'view') return;
+
     setRows(prev => prev.map(row => {
       if (row.id === rowId) {
         const updatedRow = { ...row, [field]: value };
@@ -472,7 +499,7 @@ const VoucherTransactionPage = () => {
 
     try {
       setIsSubmitting(true);
-      
+
       const response = await fetch(`http://localhost:7000/vouchers/${voucherNumber}`, {
         method: 'PUT',
         headers: {
@@ -524,7 +551,7 @@ const VoucherTransactionPage = () => {
 
     try {
       setIsSubmitting(true);
-      
+
       const response = await fetch("http://localhost:7000/vouchers", {
         method: 'POST',
         headers: {
@@ -612,9 +639,9 @@ const VoucherTransactionPage = () => {
           </div>
 
           <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[13px] pl-3">
-            Voucher Transaction 
+            Voucher Transaction
             {mode !== 'create' && (
-              mode === 'voucher' 
+              mode === 'update'
                 ? ` - View/Edit Voucher ${voucherNumberParam}`
                 : ` - All Transactions containing Ledger: ${searchLedger}`
             )}
@@ -671,7 +698,7 @@ const VoucherTransactionPage = () => {
             isSubmitting={isSubmitting}
             onSubmit={mode === 'create' ? handleCreateVoucher : handleUpdateVoucher}
             hideFooter={true}
-            isReadOnly={mode !== 'create'} // Make fields read-only in view mode
+            isReadOnly={(mode === 'view' || mode === "ledger")} // Make fields read-only in view mode
             searchLedger={searchLedger} // Pass the search ledger to highlight it
           />
         </div>
@@ -682,7 +709,7 @@ const VoucherTransactionPage = () => {
             <tfoot>
               <tr className="text-[12px] bg-yellow-100">
                 <td className="p-1 border border-slate-400">
-                  {(mode === 'create' || mode === 'voucher' || mode === 'ledger') && (
+                  {(mode === "create" || mode === "update") && (
                     <button
                       onClick={mode === 'create' ? handleCreateVoucher : handleUpdateVoucher}
                       disabled={isSubmitting}

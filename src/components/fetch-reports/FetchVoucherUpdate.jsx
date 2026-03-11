@@ -13,7 +13,7 @@ const moduleConfig = {
     }
 };
 
-const FetchVoucherTransactions = () => {
+const FetchVoucherUpdate = () => {
     const { type } = useParams();
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -160,7 +160,7 @@ const FetchVoucherTransactions = () => {
     }, [filteredData, selectedIndex, navigate]);
 
     const handleItemClick = item => {
-        navigate(`/voucher-transaction-report/${item.voucher_number}`);
+        navigate(`/fetch-voucher-update/${item.voucher_number}`);
     };
 
     const renderListItem = (item, index) => {
@@ -294,4 +294,4 @@ const FetchVoucherTransactions = () => {
     );
 };
 
-export default FetchVoucherTransactions;
+export default FetchVoucherUpdate;

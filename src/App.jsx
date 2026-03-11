@@ -7,11 +7,13 @@ import LedgerConsolidatePage from './components/LedgerConsolidatePage'
 import LedgerConsolidationReport from './components/LedgerConsolidationReport'
 import VoucherTransactionPage from './components/voucher/VoucherTransactionPage'
 import DivisionMaster from './components/DivisionMaster'
-import FetchVoucherTransactions from './components/fetch-reports/FetchVoucherTransactions'
+import FetchVoucherReports from './components/fetch-reports/FetchVoucherReports'
 import FetchSingleTrialBalance from './components/fetch-reports/FetchSingleTrialBalance'
 import FetchMultipleTrialBalance from './components/fetch-reports/FetchMultipleTrialBalance'
 import FetchTrialBalanceByLedger from './components/fetch-reports/FetchTrialBalanceByLedger'
 import SecondaryFetchLedger from './components/fetch-reports/SecondaryFetchLedger'
+import FetchVoucherUpdate from './components/fetch-reports/FetchVoucherUpdate'
+import FetchVoucherDivision from './components/fetch-reports/FetchVoucherDivision'
 
 function App() {
 
@@ -44,7 +46,7 @@ function App() {
             }
             />
             <Route path='/fetch-voucher-transaction' element={
-              <FetchVoucherTransactions />
+              <FetchVoucherReports />
             } />
             <Route path='/voucher-transaction-report/:voucherNumberParam' element={
               <VoucherTransactionPage />
@@ -62,11 +64,19 @@ function App() {
               path="/secondary-fetch-ledger/:ledger"
               element={<SecondaryFetchLedger />}
             />
-            <Route path='vouchers/ledger/:ledger' element={
+            <Route path='/vouchers/ledger/:ledger' element={
               <VoucherTransactionPage />
             } />
+            <Route path='/fetch-voucher-update' element={
+              <FetchVoucherUpdate />
+            } />
+            <Route path='/fetch-voucher-update/:voucherNumberParam' element={
+              <VoucherTransactionPage />
+            }  />
+            <Route path='/fetch-voucher-division' element={
+              <FetchVoucherDivision />
+            } />
           </Routes>
-          
         </BrowserRouter>
       </div>
     </>

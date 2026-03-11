@@ -11,21 +11,22 @@ const VoucherTable = ({
   onInputChange,
   onLedgerChange,
   ledgerOptions,
+  isReadOnly,
 }) => {
   const [focusedInput, setFocusedInput] = useState(null);
   const inputRef = useRef({});
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    const firstLedger = inputRef.current["0-0"];
+    const timer = setTimeout(() => {
+      const firstLedger = inputRef.current["0-0"];
 
-    if (firstLedger && firstLedger.focus) {
-      firstLedger.focus();
-    }
-  }, 100);
+      if (firstLedger && firstLedger.focus) {
+        firstLedger.focus();
+      }
+    }, 100);
 
-  return () => clearTimeout(timer);
-}, []);
+    return () => clearTimeout(timer);
+  }, []);
 
   const getTotalCols = () => {
     return divisionType === 'single' ? 3 : numberOfDivisions * 2 + 1;
@@ -188,40 +189,44 @@ const VoucherTable = ({
     const ledgerIdx = colIndex;
     cells.push(
       <td key="ledger" className={cellClass} style={{ height: '16px' }}>
-        <Select
-          ref={(el) => (inputRef.current[`${rowIndex}-${ledgerIdx}`] = el)}
-          options={ledgerOptions}
-          value={ledgerOptions.find(opt => opt.value === row.ledgerCode) || null}
-          onChange={(opt) => {
-            onLedgerChange(row.id, opt);
-            setTimeout(() => {
-              moveToCell(rowIndex, ledgerIdx + 1);
-            }, 50);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Backspace') {
-              // Access the internal input to check if it's empty
-              const inputValue = e.target.value;
+        {isReadOnly ? (
+          <div className='text-[12px] pl-0.5 font-semibold'>{row.ledgerName}</div>
+        ) : (
+          <Select
+            ref={(el) => (inputRef.current[`${rowIndex}-${ledgerIdx}`] = el)}
+            options={ledgerOptions}
+            value={ledgerOptions.find(opt => opt.value === row.ledgerCode) || null}
+            onChange={(opt) => {
+              onLedgerChange(row.id, opt);
+              setTimeout(() => {
+                moveToCell(rowIndex, ledgerIdx + 1);
+              }, 50);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace') {
+                // Access the internal input to check if it's empty
+                const inputValue = e.target.value;
 
-              // If the search input is empty, navigate to the previous cell
-              if (!inputValue) {
-                e.preventDefault();
+                // If the search input is empty, navigate to the previous cell
+                if (!inputValue) {
+                  e.preventDefault();
 
-                // Use your logic to determine the previous cell
-                if (rowIndex > 0) {
-                  // Go to the last column of the previous row
-                  const totalCols = getTotalCols();
-                  moveToCell(rowIndex - 1, totalCols - 1);
+                  // Use your logic to determine the previous cell
+                  if (rowIndex > 0) {
+                    // Go to the last column of the previous row
+                    const totalCols = getTotalCols();
+                    moveToCell(rowIndex - 1, totalCols - 1);
+                  }
+                  // If you are in the first row, col 0, do nothing or handle accordingly
                 }
-                // If you are in the first row, col 0, do nothing or handle accordingly
               }
-            }
-          }}
-          styles={customStyles}
-          isSearchable
-          openMenuOnFocus={true}
-          menuPortalTarget={document.body}
-        />
+            }}
+            styles={customStyles}
+            isSearchable
+            openMenuOnFocus={true}
+            menuPortalTarget={document.body}
+          />
+        )}
       </td>
     );
     colIndex++;
@@ -236,7 +241,7 @@ const VoucherTable = ({
           <input
             ref={(el) => (inputRef.current[`${rowIndex}-${amtIdx}`] = el)}
             type="text"
-            className={`${inputClass} text-right text-[12px] ${isCredit  ? 'text-red-500' : ''}`}
+            className={`${inputClass} text-right text-[12px] ${isCredit ? 'text-red-500' : ''}`}
             value={focusedInput === `${rowIndex}-${amtIdx}`
               ? row.amount
               : formatToNaira(row.amount)}
@@ -248,6 +253,7 @@ const VoucherTable = ({
             onChange={(e) => onInputChange(row.id, 'amount', e.target.value)}
             onKeyDown={e => handleKeyDown(e, rowIndex, amtIdx)}
             style={{ height: '16px' }}
+            readOnly={isReadOnly}
           />
         </td>
       );
@@ -304,6 +310,7 @@ const VoucherTable = ({
               onKeyDown={(e) => handleKeyDown(e, rowIndex, dAmtIdx)}
               onWheel={(e) => e.target.blur()}
               style={{ height: '16px' }}
+              readOnly={isReadOnly}
             />
           </td>
         );
@@ -319,7 +326,7 @@ const VoucherTable = ({
               value={row[typeKey] || 'Debit'}
               onChange={e => onInputChange(row.id, typeKey, e.target.value)}
               onKeyDown={e => handleKeyDown(e, rowIndex, dTypIdx)}
-            style={{ height: '16px' }}
+              style={{ height: '16px' }}
             >
               <option value="Debit">Dr</option>
               <option value="Credit">Cr</option>
@@ -348,13 +355,15 @@ const VoucherTable = ({
     // );
     cells.push(
       <td key="at" className={`${cellClass} text-center`} style={{ height: '16px' }}>
-        <button
-          onClick={() => (rowIndex === rows.length - 1 ? onAddRow() : onRemoveRow(row.id))}
-          className={`rounded text-white text-[9px] ${rowIndex === rows.length - 1 ? 'bg-blue-500' : 'bg-red-400'}`}
-          style={{ width: '14px', height: '14px', lineHeight: '14px', padding: 0 }}
-        >
-          {rowIndex === rows.length - 1 ? '+' : '-'}
-        </button>
+        {!isReadOnly && (
+          <button
+            onClick={() => (rowIndex === rows.length - 1 ? onAddRow() : onRemoveRow(row.id))}
+            className={`rounded text-white text-[9px] ${rowIndex === rows.length - 1 ? 'bg-blue-500' : 'bg-red-400'}`}
+            style={{ width: '14px', height: '14px', lineHeight: '14px', padding: 0 }}
+          >
+            {rowIndex === rows.length - 1 ? '+' : '-'}
+          </button>
+        )}
       </td>
     );
 
