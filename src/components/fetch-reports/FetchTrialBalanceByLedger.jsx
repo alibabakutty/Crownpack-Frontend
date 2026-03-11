@@ -53,7 +53,9 @@ const FetchTrialBalanceByLedger = () => {
 
           totalDr: 0,
           totalCr: 0,
-          netAmt: 0
+
+          netDr: 0,
+          netCr: 0
         }
       }
 
@@ -76,9 +78,24 @@ const FetchTrialBalanceByLedger = () => {
 
       g.totalDr += Number(row.totalDr || 0);
       g.totalCr += Number(row.totalCr || 0);
-      g.netAmt += Number(row.netAmt || 0);
+
     });
-    return Object.values(grouped);
+
+    // calculate net
+    Object.values(grouped).forEach(g => {
+      const net = g.totalDr - g.totalCr;
+
+      if (net > 0) {
+        g.netDr = net;
+        g.netCr = 0;
+      } else {
+        g.netDr = 0;
+        g.netCr = Math.abs(net);
+      }
+    })
+    return Object.values(grouped).sort((a, b) =>
+      a.ledger_name.localeCompare(b.ledger_name),
+    )
   }
 
   // FETCH DATA
@@ -209,17 +226,20 @@ const FetchTrialBalanceByLedger = () => {
         <div className="flex text-[12px]">
           {/* <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div> */}
 
-          <div className=' w-[47%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+          <div className=' w-[45%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
             {item.ledger_name || ''}
           </div>
-          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
             {formatToNaira(item.totalDr)}
           </div>
-          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
             {formatToNaira(item.totalCr)}
           </div>
-          <div className=' w-[18%] border border-right border-gray-500 text-right pr-0.5'>
-            {formatToNaira(item.netAmt)}
+          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+            {item.netDr ? formatToNaira(item.netDr) : ''}
+          </div>
+          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+            {item.netCr ? formatToNaira(item.netCr) : ''}
           </div>
         </div>
       </li>
@@ -290,15 +310,18 @@ const FetchTrialBalanceByLedger = () => {
 
               <div className="flex text-[12px] font-semibold border-b">
                 {/* <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div> */}
-                <div className='w-[47%] text-center border border-gray-500'>Ledger</div>
-                <div className='w-[18%] text-center border border-gray-500'>
+                <div className='w-[45%] text-center border border-gray-500'>Ledger</div>
+                <div className='w-[14%] text-center border border-gray-500'>
                   Total (Dr)
                 </div>
-                <div className='w-[18%] text-center border border-gray-500'>
+                <div className='w-[14%] text-center border border-gray-500'>
                   Total (Cr)
                 </div>
-                <div className='w-[18%] text-center border border-gray-500'>
-                  Net Amount
+                <div className='w-[14%] text-center border border-gray-500'>
+                  Net Amount (Dr)
+                </div>
+                <div className='w-[14%] text-center border border-gray-500'>
+                  Net Amount (Cr)
                 </div>
               </div>
 

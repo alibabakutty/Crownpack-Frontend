@@ -5,41 +5,42 @@ export const generateClientSideVoucherNumber = (divisionType) => {
   const day = today.getDate().toString().padStart(2, "0");
   const month = (today.getMonth() + 1).toString().padStart(2, "0");
   const year = today.getFullYear().toString().slice(-2);
-  
+
   const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
-  
+
   // Determine suffix: 'S' for single, 'M' for multiple
   const typeSuffix = divisionType === 'single' ? 'S' : 'M';
-  
+
   return `VCH-${day}-${month}-${year}-${randomSuffix}-${typeSuffix}`;
 };
 
 
 // Fetch voucher number from server (primary method)
-export const fetchVoucherNumberFromServer = async () => {
-
+export const fetchVoucherNumberFromServer = async (divisionType) => {
   try {
-
     const response = await fetch("http://localhost:7000/vouchers/random-number");
 
     if (!response.ok) {
-      throw new Error("Server error");
+      console.warn("Server returned error, using fallback...");
+      // Don't throw error, just use fallback
+      const fallbackNumber = generateClientSideVoucherNumber(divisionType);
+      return {
+        voucherNumber: fallbackNumber,
+        success: false,
+        error: `Server error: ${response.status}`
+      };
     }
 
     const data = await response.json();
-
     return {
       voucherNumber: data.voucherNumber,
       success: true
     };
 
   } catch (error) {
-
-    console.error("Error fetching voucher number:", error);
-
-    // fallback
-    const fallbackNumber = generateClientSideVoucherNumber();
-
+    console.warn("Network error, using fallback...");
+    // Don't throw error, just use fallback
+    const fallbackNumber = generateClientSideVoucherNumber(divisionType);
     return {
       voucherNumber: fallbackNumber,
       success: false,
@@ -47,6 +48,13 @@ export const fetchVoucherNumberFromServer = async () => {
     };
   }
 };
+
+//   const formatAmountBasicINR = (value) => {
+//     if (!value) return "";
+//     return Number(value).toLocaleString("en-US", {
+//       minimumFractionDigits: 2,
+//     });
+//   };
 
 // export const formatNumber = num => {
 //   if (num === null || num === undefined || num === '') return '';

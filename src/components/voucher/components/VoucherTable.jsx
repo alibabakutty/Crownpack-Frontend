@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
-import { formatToNaira } from './utils/voucherUtils';
+import { formatToNaira } from '../utils/voucherUtils';
 
 const VoucherTable = ({
   rows,
