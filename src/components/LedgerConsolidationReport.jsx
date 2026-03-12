@@ -117,17 +117,17 @@ const LedgerConsolidationReport = () => {
           <div className='flex text-[13px] mt-1 ml-2 leading-4'>
             <label htmlFor="tallyReport" className='w-[30%]'>Tally Report</label>
             <span>:</span>
-            <input type="text" name='tallyReport' ref={(input) => (inputRef.current[6] = input)} value={consolidationData?.ledger_tally_report || ''} onKeyDown={(e) => handleKeyDownLedger(e, 6)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
+            <input type="text" name='tallyReport' ref={(input) => (inputRef.current[6] = input)} value={consolidationData?.tally_report || ''} onKeyDown={(e) => handleKeyDownLedger(e, 6)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
           </div>
           <div className='flex text-[13px] mt-1 ml-2 leading-4'>
             <label htmlFor="debitOrCredit" className='w-[30%]'>Dr/Cr</label>
             <span>:</span>
-            <input type="text" name='debitOrCredit' ref={(input) => (inputRef.current[7] = input)} value={consolidationData?.ledger_debit_credit || ''} onKeyDown={(e) => handleKeyDownLedger(e, 7)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
+            <input type="text" name='debitOrCredit' ref={(input) => (inputRef.current[7] = input)} value={consolidationData?.debit_credit || ''} onKeyDown={(e) => handleKeyDownLedger(e, 7)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
           </div>
           <div className='flex text-[13px] mt-1 ml-2 leading-4'>
             <label htmlFor="trialBalance" className='w-[30%]'>Trial Balance</label>
             <span>:</span>
-            <input type="text" name='trialBalance' ref={(input) => (inputRef.current[8] = input)} value={consolidationData?.ledger_trial_balance || ''} onKeyDown={(e) => handleKeyDownLedger(e, 8)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
+            <input type="text" name='trialBalance' ref={(input) => (inputRef.current[8] = input)} value={consolidationData?.trial_balance || ''} onKeyDown={(e) => handleKeyDownLedger(e, 8)} className='w-[200px] ml-2 pl-0.5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 border border-transparent focus:border' autoComplete='off' readOnly/>
           </div>
           <div className='flex text-[13px] mt-1 ml-2 leading-4'>
             <label htmlFor="status" className='w-[30%]'>Status</label>
