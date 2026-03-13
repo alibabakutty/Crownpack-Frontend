@@ -204,46 +204,54 @@ const FetchVoucherUpdate = () => {
         navigate(`/fetch-voucher-update/${item.voucher_number}`);
     };
 
+    const totals = filteredData.reduce((acc, curr) => {
+        acc.totalDr += Number(curr.totalDr || 0);
+        acc.totalCr += Number(curr.totalCr || 0);
+        acc.netDr += Number(curr.netDr || 0);
+        acc.netCr += Number(curr.netCr || 0);
+        return acc;
+    }, { totalDr: 0, totalCr: 0, netDr: 0, netCr: 0 });
+
     const renderListItem = (item, index) => {
         const isSelected = index === selectedIndex;
 
         return (
             <li
                 key={index}
-                className={`py-0.3 cursor-pointer ${isSelected
-                    ? 'bg-yellow-100'
+                className={`border-b border-gray-400 ${isSelected
+                    ? 'bg-green-100'
                     : 'hover:bg-blue-50'
-                    }`}
+                    } cursor-pointer`}
                 onClick={() => handleItemClick(item)}
             >
                 <div className="flex text-[12px]">
-                    <div className='w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
+                    <div className='w-[15%] border-l border-r border-gray-400 pl-0.5'>{item.voucher_number}</div>
 
-                    <div className='w-[7%] text-center border border-right border-gray-500'>
+                    <div className='w-[7%] text-center border-r border-gray-400'>
                         {item.voucher_date ? item.voucher_date.split('-').reverse().join('-') : ''}
                     </div>
 
-                    <div className='w-[7%] border border-right border-gray-500 text-center capitalize'>
+                    <div className='w-[7%] border-r border-gray-400 text-center capitalize'>
                         {item.division_type || ''}
                     </div>
 
-                    <div className='w-[16%] border border-right border-gray-500 text-center capitalize'>
+                    <div className='w-[16%] border-r border-gray-400 pl-0.5 capitalize'>
                         {item.main_group_name || ''}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.totalDr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.totalCr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.netDr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.netCr)}
                     </div>
                 </div>
@@ -312,19 +320,19 @@ const FetchVoucherUpdate = () => {
                             List of Voucher Transactions
                         </h2>
 
-                        <div className="flex text-[12px] font-semibold border-b">
-                            <div className='w-[15%] text-center border border-gray-500'>VCH-No.</div>
-                            <div className='w-[7%] text-center border border-gray-500'>VCH-Date</div>
-                            <div className='w-[7%] text-center border border-gray-500'>Type</div>
-                            <div className='w-[16%] text-center border border-gray-500'>Main Group Name</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Dr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Cr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Dr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Cr</div>
+                        <div className="flex text-[12px] font-semibold border-b border-gray-400">
+                            <div className='w-[15%] text-center border-r border-gray-400'>VCH-No.</div>
+                            <div className='w-[7%] text-center border-r border-gray-400'>VCH-Date</div>
+                            <div className='w-[7%] text-center border-r border-gray-400'>Type</div>
+                            <div className='w-[16%] text-center border-r border-gray-400'>Main Group Name</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Total Dr</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Total Cr</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Net Dr</div>
+                            <div className='w-[15%] text-center'>Net Cr</div>
                         </div>
 
                         <div
-                            className="h-[82vh] overflow-y-auto"
+                            className="h-[79vh] overflow-y-auto"
                             ref={listRef}
                         >
                             <ul>
@@ -332,6 +340,23 @@ const FetchVoucherUpdate = () => {
                                     renderListItem
                                 )}
                             </ul>
+                        </div>
+
+                        {/* Grand Total Footer */}
+                        <div className='flex text-[12px] font-bold bg-gray-300 border-t border-gray-600'>
+                            <div className='w-[45%] border-r border-gray-500 pl-2'>GRAND TOTAL</div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.totalDr)}
+                            </div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.totalCr)}
+                            </div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.netDr)}
+                            </div>
+                            <div className='text-right w-[15%] pr-0.5'>
+                                {formatToNaira(totals.netCr)}
+                            </div>
                         </div>
                     </div>
                 </div>
