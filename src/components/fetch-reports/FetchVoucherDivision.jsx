@@ -66,6 +66,7 @@ const FetchVoucherDivision = () => {
                             vch_date: v.voucher_date,
                             ledger_name: v.ledger_name,
                             division_type: v.division_type,
+                            main_group_name: v.main_group_name,
                             division: d.key,
                             Vch_Amt_Dr: type === 'debit' ? amt : 0,
                             Vch_Amt_Cr: type === 'credit' ? amt : 0,
@@ -179,14 +180,18 @@ const FetchVoucherDivision = () => {
                 onClick={() => { }}
             >
                 <div className="flex text-[12px]">
-                    <div className='w-[20%] border border-right border-gray-500 pl-0.5 truncate'>{item.vch_no}</div>
+                    <div className='w-[13%] border border-right border-gray-500 pl-0.5 truncate'>{item.vch_no}</div>
 
-                    <div className='w-[9%] text-center border border-right border-gray-500 truncate text-center pl-0.5'>
+                    <div className='w-[8%] text-center border border-right border-gray-500 truncate text-center pl-0.5'>
                         {item.vch_date?.split("-").reverse().join("-")}
                     </div>
 
-                    <div className='w-[30%] border border-right border-gray-500 capitalize pl-0.5'>
+                    <div className='w-[25%] border border-right border-gray-500 capitalize pl-0.5 truncate'>
                         {item.ledger_name || ''}
+                    </div>
+
+                    <div className='w-[25%] border border-right border-gray-500 capitalize pl-0.5 truncate text-center'>
+                        {item.main_group_name || ''}
                     </div>
 
                     <div className='w-[10%] border border-right border-gray-500 text-center pr-0.5 capitalize'>

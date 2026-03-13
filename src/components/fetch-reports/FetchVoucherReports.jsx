@@ -39,21 +39,62 @@ const FetchVoucherReports = () => {
         const grouped = {};
 
         rows.forEach(row => {
-            if (!grouped[row.voucher_number]) {
-                grouped[row.voucher_number] = {
-                    voucher_number: row.voucher_number,
+            const voucher = row.voucher_number;
+
+            if (!grouped[voucher]) {
+                grouped[voucher] = {
+                    voucher_number: voucher,
                     voucher_date: row.voucher_date,
                     division_type: row.division_type,
+                    main_group_name: row.main_group_name,
+
+                    d1Dr: 0, d1Cr: 0,
+                    d2Dr: 0, d2Cr: 0,
+                    d3Dr: 0, d3Cr: 0,
+                    d4Dr: 0, d4Cr: 0,
+                    d5Dr: 0, d5Cr: 0,
+
                     totalDr: 0,
                     totalCr: 0,
-                    netAmt: 0,
+
+                    netDr: 0,
+                    netCr: 0
                 };
             }
 
-            grouped[row.voucher_number].totalDr += Number(row.totalDr || 0);
-            grouped[row.voucher_number].totalCr += Number(row.totalCr || 0);
-            grouped[row.voucher_number].netAmt += Number(row.netAmt || 0);
+            const g = grouped[voucher];
+
+            if (row.d1Type === "Debit") g.d1Dr += Number(row.d1Amount || 0);
+            if (row.d1Type === "Credit") g.d1Cr += Number(row.d1Amount || 0);
+
+            if (row.d2Type === "Debit") g.d2Dr += Number(row.d2Amount || 0);
+            if (row.d2Type === "Credit") g.d2Cr += Number(row.d2Amount || 0);
+
+            if (row.d3Type === "Debit") g.d3Dr += Number(row.d3Amount || 0);
+            if (row.d3Type === "Credit") g.d3Cr += Number(row.d3Amount || 0);
+
+            if (row.d4Type === "Debit") g.d4Dr += Number(row.d4Amount || 0);
+            if (row.d4Type === "Credit") g.d4Cr += Number(row.d4Amount || 0);
+
+            if (row.d5Type === "Debit") g.d5Dr += Number(row.d5Amount || 0);
+            if (row.d5Type === "Credit") g.d5Cr += Number(row.d5Amount || 0);
+
+            g.totalDr += Number(row.totalDr || 0);
+            g.totalCr += Number(row.totalCr || 0);
         });
+
+        // Calculate net
+        Object.values(grouped).forEach(g => {
+            const net = g.totalDr - g.totalCr;
+
+            if (net > 0) {
+                g.netDr = net;
+                g.netCr = 0;
+            } else {
+                g.netDr = 0;
+                g.netCr = Math.abs(net);
+            }
+        })
 
         return Object.values(grouped);
     };
@@ -89,19 +130,20 @@ const FetchVoucherReports = () => {
     }, [currentModule.apiEndpoint, hasFetched]);
 
     const filterData = useCallback((list, term) => {
-    if (!term) return list;
+        if (!term) return list;
 
-    const lowerTerm = term.toLowerCase();
+        const lowerTerm = term.toLowerCase();
 
-    return list.filter(item =>
-        item.voucher_number?.toLowerCase().includes(lowerTerm) ||
-        item.voucher_date?.includes(lowerTerm) ||
-        item.division_type?.toLowerCase().includes(lowerTerm) ||
-        String(item.totalDr).includes(lowerTerm) ||
-        String(item.totalCr).includes(lowerTerm) ||
-        String(item.netAmt).includes(lowerTerm)
-    );
-}, []);
+        return list.filter(item =>
+            item.voucher_number?.toLowerCase().includes(lowerTerm) ||
+            item.voucher_date?.includes(lowerTerm) ||
+            item.division_type?.toLowerCase().includes(lowerTerm) ||
+            item.main_group_name?.toLowerCase().includes(lowerTerm) ||
+            String(item.totalDr).includes(lowerTerm) ||
+            String(item.totalCr).includes(lowerTerm) ||
+            String(item.netAmt).includes(lowerTerm)
+        );
+    }, []);
 
     useEffect(() => {
         const filtered = filterData(data, searchTerm);
@@ -186,8 +228,8 @@ const FetchVoucherReports = () => {
                         {item.division_type || ''}
                     </div>
 
-                    <div className='w-[26%] border border-right border-gray-500'>
-
+                    <div className='w-[16%] border border-right border-gray-500 text-center'>
+                        {item.main_group_name || ''}
                     </div>
 
                     <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
@@ -199,7 +241,11 @@ const FetchVoucherReports = () => {
                     </div>
 
                     <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
-                        {formatToNaira(item.netAmt)}
+                        {formatToNaira(item.netDr)}
+                    </div>
+
+                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                        {formatToNaira(item.netCr)}
                     </div>
                 </div>
             </li>
@@ -271,10 +317,11 @@ const FetchVoucherReports = () => {
                             <div className='w-[15%] text-center border border-gray-500'>VCH-No.</div>
                             <div className='w-[7%] text-center border border-gray-500'>VCH-Date</div>
                             <div className='w-[7%] text-center border border-gray-500'>Division</div>
-                            <div className='w-[26%] text-center border border-gray-500'></div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Debit</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Credit</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Amount</div>
+                            <div className='w-[16%] text-center border border-gray-500'>Main Group</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Total Dr</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Total Cr</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Net Dr</div>
+                            <div className='w-[15%] text-center border border-gray-500'>Net Cr</div>
                         </div>
 
                         <div
