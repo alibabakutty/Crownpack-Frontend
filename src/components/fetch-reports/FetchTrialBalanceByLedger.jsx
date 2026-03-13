@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { formatToNaira } from '../voucher/utils/voucherUtils';
@@ -204,12 +204,18 @@ const FetchTrialBalanceByLedger = () => {
   }, [filteredData, selectedIndex, navigate]);
 
   const handleItemClick = (item) => {
-
     const ledger = encodeURIComponent(item.ledger_name);
-
     navigate(`/secondary-fetch-ledger/${ledger}`)
-
   };
+
+  const totals = useMemo(() => {
+    return filteredData.reduce((acc, item) => ({
+      totalDr: acc.totalDr + Number(item.totalDr || 0),
+      totalCr: acc.totalCr + Number(item.totalCr || 0),
+      netDr: acc.netDr + Number(item.netDr || 0),
+      netCr: acc.netCr + Number(item.netCr || 0),
+    }), { totalDr: 0, totalCr: 0, netDr: 0, netCr: 0 });
+  }, [filteredData]);
 
   const renderListItem = (item, index) => {
     const isSelected = index === selectedIndex;
@@ -218,27 +224,26 @@ const FetchTrialBalanceByLedger = () => {
       <li
         key={index}
         className={`py-0.3 cursor-pointer ${isSelected
-          ? 'bg-yellow-100'
+          ? 'bg-green-100'
           : 'hover:bg-blue-50'
           }`}
         onClick={() => handleItemClick(item)}
       >
-        <div className="flex text-[12px]">
-          {/* <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div> */}
+        <div className="flex text-[12px] border-b-[0.5px] border-gray-400">
 
-          <div className=' w-[45%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+          <div className=' w-[45%] text-center border-r-[0.5px] border-gray-400 truncate text-left pl-0.5'>
             {item.ledger_name || ''}
           </div>
-          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
             {formatToNaira(item.totalDr)}
           </div>
-          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
             {formatToNaira(item.totalCr)}
           </div>
-          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
             {item.netDr ? formatToNaira(item.netDr) : ''}
           </div>
-          <div className=' w-[14%] border border-right border-gray-500 text-right pr-0.5'>
+          <div className=' w-[14%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
             {item.netCr ? formatToNaira(item.netCr) : ''}
           </div>
         </div>
@@ -262,43 +267,51 @@ const FetchTrialBalanceByLedger = () => {
 
   return (
     <div className="flex font-amasis relative">
-      <button
-        onClick={() => navigate(-1)}
-        className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
-      >
-        <svg
-          className="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
-        Back
-      </button>
       <div className="w-full h-screen flex">
         {/* RIGHT PANEL */}
         <div className="w-full flex flex-col items-center">
 
-          <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
-            <p className="text-[13px] underline font-semibold">
-              Trial Balance Reports - Ledger
-            </p>
+          <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 grid grid-cols-3 items-center py-1.5 px-2">
 
-            <input
-              ref={searchInputRef}
-              value={searchTerm}
-              onChange={e =>
-                setSearchTerm(e.target.value)
-              }
-              placeholder="Search voucher..."
-              className="w-[550px] mt-2 h-5 text-sm border pl-1"
-            />
+            <div className='flex justify-start'>
+              <button
+                onClick={() => navigate(-1)}
+                className=" flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                Back
+              </button>
+            </div>
+
+            <div className='flex justify-center'>
+              <input
+                ref={searchInputRef}
+                value={searchTerm}
+                onChange={e =>
+                  setSearchTerm(e.target.value)
+                }
+                placeholder="Search voucher..."
+                className="w-[550px] h-5 text-sm border pl-1"
+              />
+            </div>
+
+            <div className='flex justify-end'>
+              <p className="text-[13px] underline font-semibold">
+                Trial Balance Reports - Ledger
+              </p>
+            </div>
           </div>
 
           <div className="w-[1360px] border border-gray-600 bg-amber-50 overflow-x-auto">
@@ -308,19 +321,18 @@ const FetchTrialBalanceByLedger = () => {
                 List of Trial Balance Reports - Ledger
               </h2>
 
-              <div className="flex text-[12px] font-semibold border-b">
-                {/* <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div> */}
-                <div className='w-[45%] text-center border border-gray-500'>Ledger</div>
-                <div className='w-[14%] text-center border border-gray-500'>
+              <div className="flex text-[12px] font-semibold border-b-[0.5px] border-gray-500">
+                <div className='w-[45%] text-center border-r-[0.5px] border-gray-500'>Ledger</div>
+                <div className='w-[14%] text-center border-r-[0.5px] border-gray-500'>
                   Total (Dr)
                 </div>
-                <div className='w-[14%] text-center border border-gray-500'>
+                <div className='w-[14%] text-center border-r-[0.5px] border-gray-500'>
                   Total (Cr)
                 </div>
-                <div className='w-[14%] text-center border border-gray-500'>
+                <div className='w-[14%] text-center border-r-[0.5px] border-gray-500'>
                   Net Amount (Dr)
                 </div>
-                <div className='w-[14%] text-center border border-gray-500'>
+                <div className='w-[14%] text-center border-r-[0.5px] border-gray-500'>
                   Net Amount (Cr)
                 </div>
               </div>
@@ -334,6 +346,14 @@ const FetchTrialBalanceByLedger = () => {
                     renderListItem
                   )}
                 </ul>
+              </div>
+
+              <div className="flex text-[11px] font-bold bg-yellow-100 border-t-[1.5px] border-gray-600">
+                <div className='w-[45%] text-right pr-2 border-r-[0.5px] border-gray-500'>Grand Total</div>
+                <div className='w-[14%] text-right pr-1 border-r-[0.5px] border-gray-500'>{formatToNaira(totals.totalDr)}</div>
+                <div className='w-[14%] text-right pr-1 border-r-[0.5px] border-gray-500 text-red-500'>{formatToNaira(totals.totalCr)}</div>
+                <div className='w-[14%] text-right pr-1 border-r-[0.5px] border-gray-500'>{formatToNaira(totals.netDr)}</div>
+                <div className='w-[14%] text-right pr-1 text-red-500'>{formatToNaira(totals.netCr)}</div>
               </div>
             </div>
           </div>

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { formatToNaira } from '../voucher/utils/voucherUtils';
+import Decimal from 'decimal.js';
 
 const moduleConfig = {
     voucher: {
@@ -147,6 +148,37 @@ const FetchMultipleTrialBalance = () => {
         navigate(`/voucher-transaction-report/${item.voucher_number}`);
     };
 
+    const totals = useMemo(() => {
+        return filteredData.reduce((acc, item) => {
+            const toDec = (val) => new Decimal(val || 0);
+
+            return {
+                d1Dr: acc.d1Dr.plus(item.d1Type === 'Debit' ? toDec(item.d1Amount) : 0),
+                d1Cr: acc.d1Cr.plus(item.d1Type === 'Credit' ? toDec(item.d1Amount) : 0),
+                d2Dr: acc.d2Dr.plus(item.d2Type === 'Debit' ? toDec(item.d2Amount) : 0),
+                d2Cr: acc.d2Cr.plus(item.d2Type === 'Credit' ? toDec(item.d2Amount) : 0),
+                d3Dr: acc.d3Dr.plus(item.d3Type === 'Debit' ? toDec(item.d3Amount) : 0),
+                d3Cr: acc.d3Cr.plus(item.d3Type === 'Credit' ? toDec(item.d3Amount) : 0),
+                d4Dr: acc.d4Dr.plus(item.d4Type === 'Debit' ? toDec(item.d4Amount) : 0),
+                d4Cr: acc.d4Cr.plus(item.d4Type === 'Credit' ? toDec(item.d4Amount) : 0),
+                d5Dr: acc.d5Dr.plus(item.d5Type === 'Debit' ? toDec(item.d5Amount) : 0),
+                d5Cr: acc.d5Cr.plus(item.d5Type === 'Credit' ? toDec(item.d5Amount) : 0),
+                totalDr: acc.totalDr.plus(toDec(item.totalDr)),
+                totalCr: acc.totalCr.plus(toDec(item.totalCr)),
+                netDr: acc.netDr.plus(item.netAmt > 0 ? toDec(item.netAmt) : 0),
+                netCr: acc.netCr.plus(item.netAmt < 0 ? toDec(item.netAmt).abs() : 0),
+            };
+        }, {
+            d1Dr: new Decimal(0), d1Cr: new Decimal(0),
+            d2Dr: new Decimal(0), d2Cr: new Decimal(0),
+            d3Dr: new Decimal(0), d3Cr: new Decimal(0),
+            d4Dr: new Decimal(0), d4Cr: new Decimal(0),
+            d5Dr: new Decimal(0), d5Cr: new Decimal(0),
+            totalDr: new Decimal(0), totalCr: new Decimal(0),
+            netDr: new Decimal(0), netCr: new Decimal(0)
+        });
+    }, [filteredData]);
+
     const renderListItem = (item, index) => {
         const isSelected = index === selectedIndex;
 
@@ -154,60 +186,58 @@ const FetchMultipleTrialBalance = () => {
             <li
                 key={index}
                 className={`py-0.3 cursor-pointer ${isSelected
-                    ? 'bg-yellow-100'
+                    ? 'bg-green-100'
                     : 'hover:bg-blue-50'
                     }`}
                 onClick={() => handleItemClick(item)}
             >
-                <div className="flex text-[12px]">
-                    {/* <div className='font-semibold w-[9%] border border-right border-gray-500 pl-0.5 truncate'>{item.voucher_number}</div> */}
+                <div className="flex text-[12px] border-b-[0.5px] border-gray-400">
 
-                    <div className='w-[35%] text-center border border-right border-gray-500 truncate text-left pl-0.5'>
+                    <div className='w-[35%] text-center border-r-[0.5px] border-gray-400 truncate text-left pl-0.5'>
                         {item.ledger_name || ''}
                     </div>
 
-                    {/* <div className='font-semibold w-[6%] border border-right border-gray-500 text-center capitalize'>
-                        {item.division_type || ''}
-                    </div> */}
-
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {item.d1Type === 'Debit' ? formatToNaira(item.d1Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.d1Type === 'Credit' ? formatToNaira(item.d1Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {item.d2Type === 'Debit' ? formatToNaira(item.d2Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.d2Type === 'Credit' ? formatToNaira(item.d2Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {item.d3Type === 'Debit' ? formatToNaira(item.d3Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.d3Type === 'Credit' ? formatToNaira(item.d3Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {item.d4Type === 'Debit' ? formatToNaira(item.d4Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.d4Type === 'Credit' ? formatToNaira(item.d4Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {item.d5Type === 'Debit' ? formatToNaira(item.d5Amount) : ''}
                     </div>
-                    <div className='w-[16%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[16%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.d5Type === 'Credit' ? formatToNaira(item.d5Amount) : ''}
                     </div>
-                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[18%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
                         {formatToNaira(item.totalDr)}
                     </div>
-                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[18%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
                         {formatToNaira(item.totalCr)}
                     </div>
-                    <div className='w-[18%] border border-right border-gray-500 text-right pr-0.5'>
-                        {formatToNaira(item.netAmt)}
+                    <div className='w-[18%] border-r-[0.5px] border-gray-400 text-right pr-0.5'>
+                        {item.netAmt > 0 ? formatToNaira(item.netAmt) : ''}
+                    </div>
+                    <div className='w-[18%] border-r-[0.5px] border-gray-400 text-right pr-0.5 text-red-500'>
+                        {item.netAmt < 0 ? formatToNaira(Math.abs(item.netAmt)) : ''}
                     </div>
                 </div>
             </li>
@@ -230,94 +260,103 @@ const FetchMultipleTrialBalance = () => {
 
     return (
         <div className="flex font-amasis relative">
-            <button
-                onClick={() => navigate(-1)}
-                className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
-            >
-                <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                </svg>
-                Back
-            </button>
             <div className="w-full h-screen flex">
                 {/* RIGHT PANEL */}
                 <div className="w-full flex flex-col items-center">
 
-                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
-                        <p className="text-[13px] underline font-semibold">
-                            Multiple Trial Balance Reports
-                        </p>
+                    <div className="w-[1365px] border border-black bg-yellow-50 border-b-0 grid grid-cols-3 flex items-center py-1.5 px-2">
+                        <div className='flex justify-start'>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className=" flex items-center gap-1 px-2 py-0.5 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
+                            >
+                                <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                    />
+                                </svg>
+                                Back
+                            </button>
+                        </div>
 
-                        <input
-                            ref={searchInputRef}
-                            value={searchTerm}
-                            onChange={e =>
-                                setSearchTerm(e.target.value)
-                            }
-                            placeholder="Search voucher..."
-                            className="w-[550px] mt-2 h-5 text-sm border pl-1"
-                        />
+                        <div className='flex justify-center'>
+                            <input
+                                ref={searchInputRef}
+                                value={searchTerm}
+                                onChange={e =>
+                                    setSearchTerm(e.target.value)
+                                }
+                                placeholder="Search voucher..."
+                                className="w-[550px] h-5 text-sm border pl-1"
+                            />
+                        </div>
+
+                        <div className='flex justify-end'>
+                            <p className="text-[13px] underline font-semibold">
+                                Trial Balance Reports - Multiple
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="w-[1360px] border border-gray-600 bg-amber-50 overflow-x-auto">
-
-                        <div className='min-w-[1750px]'>
+                    <div className="w-[1365px] border-[0.5px] border-gray-400 bg-amber-50 overflow-x-auto">
+                        <div className='min-w-[2750px]'>
                             <h2 className="bg-green-800 text-white text-center text-[13px]">
-                                List of Multiple Trial Balance Reports
+                                List of Trial Balance Reports - Multiple
                             </h2>
 
-                            <div className="flex text-[12px] font-semibold border-b">
-                                {/* <div className='w-[9%] text-center border border-gray-500'>VCH-No.</div> */}
-                                <div className='w-[35%] text-center border border-gray-500'>Ledger</div>
-                                {/* <div className='w-[6%] text-center border border-gray-500'>Division</div> */}
-                                <div className='w-[16%] text-center border border-gray-500'>
+                            <div className="flex text-[12px] font-semibold border-b-[0.5px] border-gray-400">
+
+                                <div className='w-[35%] text-center border-r-[0.5px] border-gray-400'>Ledger</div>
+
+                                <div className='w-[16%] text-center border-r-[0.5px] border-gray-400'>
                                     D1 (Dr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D1 (Cr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D2 (Dr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D2 (Cr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D3 (Dr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D3 (Cr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D4 (Dr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D4 (Cr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D5 (Dr)
                                 </div>
-                                <div className='w-[16%] text-center border border-gray-500'>
+                                <div className='w-[16%] text-center  border-r-[0.5px] border-gray-400'>
                                     D5 (Cr)
                                 </div>
-                                <div className='w-[18%] text-center border border-gray-500'>
+                                <div className='w-[18%] text-center  border-r-[0.5px] border-gray-400'>
                                     Total (Dr)
                                 </div>
-                                <div className='w-[18%] text-center border border-gray-500'>
+                                <div className='w-[18%] text-center  border-r-[0.5px] border-gray-400'>
                                     Total (Cr)
                                 </div>
-                                <div className='w-[18%] text-center border border-gray-500'>
-                                    Net Amount
+                                <div className='w-[18%] text-center border-r-[0.5px] border-gray-400'>
+                                    Net (Dr)
+                                </div>
+                                <div className='w-[18%] text-center  border-r-[0.5px] border-gray-400'>
+                                    Net (Cr)
                                 </div>
                             </div>
 
@@ -332,6 +371,23 @@ const FetchMultipleTrialBalance = () => {
                                 </ul>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="flex text-[10px] font-bold bg-yellow-100 w-full">
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.d1Dr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.d1Cr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.d2Dr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.d2Cr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.d3Dr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.d3Cr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.d4Dr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.d4Cr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.d5Dr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.d5Cr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.totalDr.toNumber())}</div>
+                        <div className='w-[28%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.totalCr.toNumber())}</div>
+                        <div className='w-[35%] text-right pr-0.5 border border-gray-500'>{formatToNaira(totals.netDr.toNumber())}</div>
+                        <div className='w-[35%] text-right pr-0.5 border border-gray-500 text-red-500'>{formatToNaira(totals.netCr.toNumber())}</div>
                     </div>
                 </div>
             </div>

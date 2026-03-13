@@ -141,7 +141,8 @@ const FetchVoucherReports = () => {
             item.main_group_name?.toLowerCase().includes(lowerTerm) ||
             String(item.totalDr).includes(lowerTerm) ||
             String(item.totalCr).includes(lowerTerm) ||
-            String(item.netAmt).includes(lowerTerm)
+            String(item.netDr).includes(lowerTerm) ||
+            String(item.netCr).includes(lowerTerm)
         );
     }, []);
 
@@ -205,46 +206,54 @@ const FetchVoucherReports = () => {
         navigate(`/voucher-transaction-report/${item.voucher_number}`);
     };
 
+    const totals = filteredData.reduce((acc, curr) => {
+        acc.totalDr += Number(curr.totalDr || 0);
+        acc.totalCr += Number(curr.totalCr || 0);
+        acc.netDr += Number(curr.netDr || 0);
+        acc.netCr += Number(curr.netCr || 0);
+        return acc;
+    }, { totalDr: 0, totalCr: 0, netDr: 0, netCr: 0 });
+
     const renderListItem = (item, index) => {
         const isSelected = index === selectedIndex;
 
         return (
             <li
                 key={index}
-                className={`py-0.3 cursor-pointer ${isSelected
-                    ? 'bg-yellow-100'
+                className={`border-b border-gray-400 ${isSelected
+                    ? 'bg-green-100'
                     : 'hover:bg-blue-50'
-                    }`}
+                    } cursor-pointer`}
                 onClick={() => handleItemClick(item)}
             >
                 <div className="flex text-[12px]">
-                    <div className='w-[15%] border border-right border-gray-500 pl-0.5'>{item.voucher_number}</div>
+                    <div className='w-[15%] border-l border-r border-gray-400 pl-0.5'>{item.voucher_number}</div>
 
-                    <div className='w-[7%] text-center border border-right border-gray-500'>
+                    <div className='w-[7%] text-center border-r border-gray-400'>
                         {item.voucher_date ? item.voucher_date.split('-').reverse().join('-') : ''}
                     </div>
 
-                    <div className='w-[7%] border border-right border-gray-500 text-center capitalize'>
+                    <div className='w-[7%] border-r border-gray-400 text-center capitalize'>
                         {item.division_type || ''}
                     </div>
 
-                    <div className='w-[16%] border border-right border-gray-500 text-center'>
+                    <div className='w-[16%] border-r border-gray-400 pl-0.5 capitalize'>
                         {item.main_group_name || ''}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.totalDr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.totalCr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.netDr)}
                     </div>
 
-                    <div className="text-right w-[15%] border border-right border-gray-500 pr-0.5">
+                    <div className="text-right w-[15%] border-r border-gray-400 pr-0.5">
                         {formatToNaira(item.netCr)}
                     </div>
                 </div>
@@ -268,64 +277,63 @@ const FetchVoucherReports = () => {
 
     return (
         <div className="flex font-amasis relative">
-            <button
-                onClick={() => navigate(-1)}
-                className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
-            >
-                <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                </svg>
-                Back
-            </button>
+
             <div className="w-full h-screen flex">
                 {/* RIGHT PANEL */}
                 <div className="w-full flex flex-col items-center">
 
-                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
-                        <p className="text-[13px] underline">
-                            Voucher Transaction Reports
-                        </p>
+                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 grid grid-cols-3 items-center py-1.5 px-2">
+                        {/* Column 1: Left */}
+                        <div className="flex justify-start">
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-1 px-3 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Back
+                            </button>
+                        </div>
 
-                        <input
-                            ref={searchInputRef}
-                            value={searchTerm}
-                            onChange={e =>
-                                setSearchTerm(e.target.value)
-                            }
-                            placeholder="Search voucher..."
-                            className="w-[550px] mt-2 h-5 text-sm border pl-1"
-                        />
+                        {/* Column 2: Center */}
+                        <div className="flex justify-center">
+                            <input
+                                ref={searchInputRef}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                placeholder="Search..."
+                                className="w-full max-w-[550px] h-6 text-sm border border-gray-400 pl-2 rounded"
+                            />
+                        </div>
+
+                        {/* Column 3: Right */}
+                        <div className="flex justify-end">
+                            <p className="text-[13px] font-bold underline">
+                                Voucher Transaction Reports - Display
+                            </p>
+                        </div>
                     </div>
 
                     <div className="w-[1360px] border border-gray-600 bg-amber-50">
 
                         <h2 className="bg-green-800 text-white text-center text-[13px]">
-                            List of Voucher Transactions
+                            List of Voucher Transactions - Display
                         </h2>
 
-                        <div className="flex text-[12px] font-semibold border-b">
-                            <div className='w-[15%] text-center border border-gray-500'>VCH-No.</div>
-                            <div className='w-[7%] text-center border border-gray-500'>VCH-Date</div>
-                            <div className='w-[7%] text-center border border-gray-500'>Division</div>
-                            <div className='w-[16%] text-center border border-gray-500'>Main Group</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Dr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Total Cr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Dr</div>
-                            <div className='w-[15%] text-center border border-gray-500'>Net Cr</div>
+                        <div className="flex text-[12px] font-semibold border-b border-gray-400">
+                            <div className='w-[15%] text-center border-r border-gray-400'>VCH-No.</div>
+                            <div className='w-[7%] text-center border-r border-gray-400'>VCH-Date</div>
+                            <div className='w-[7%] text-center border-r border-gray-400'>Type</div>
+                            <div className='w-[16%] text-center border-r border-gray-400'>Main Group Name</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Total Dr</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Total Cr</div>
+                            <div className='w-[15%] text-center border-r border-gray-400'>Net Dr</div>
+                            <div className='w-[15%] text-center'>Net Cr</div>
                         </div>
 
                         <div
-                            className="h-[82vh] overflow-y-auto"
+                            className="h-[83.5vh] overflow-y-auto"
                             ref={listRef}
                         >
                             <ul>
@@ -333,6 +341,23 @@ const FetchVoucherReports = () => {
                                     renderListItem
                                 )}
                             </ul>
+                        </div>
+
+                        {/* Grand Total Footer */}
+                        <div className='flex text-[12px] font-bold bg-gray-300 border-t border-gray-600'>
+                            <div className='w-[45%] border-r border-gray-500 pl-2'>GRAND TOTAL</div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.totalDr)}
+                            </div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.totalCr)}
+                            </div>
+                            <div className='text-right w-[15%] border-r border-gray-500 pr-0.5'>
+                                {formatToNaira(totals.netDr)}
+                            </div>
+                            <div className='text-right w-[15%] pr-0.5'>
+                                {formatToNaira(totals.netCr)}
+                            </div>
                         </div>
                     </div>
                 </div>

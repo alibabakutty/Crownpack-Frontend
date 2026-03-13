@@ -154,12 +154,12 @@ const VoucherTable = ({
 
   // UPDATED: Reduced column widths
   const columnWidths = {
-    sno: '30px', // Reduced from 35px
-    ledger: '200px', // Reduced from 220px
-    amount: '90px', // Reduced from 110px
-    type: '38px', // Reduced from 45px
-    total: '75px', // Reduced from 90px
-    action: '30px' // Reduced from 35px
+    sno: '30px', 
+    ledger: '150px',
+    amount: '120px',
+    type: '38px',
+    total: '75px',
+    action: '20px'
   };
 
   const handleAmountFocus = (e, cellKey) => {
@@ -344,7 +344,7 @@ const VoucherTable = ({
       </td>
     );
     cells.push(
-      <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold pr-1`} style={{ height: '16px' }}>
+      <td key="tc" className={`${cellClass} text-[12px] text-right bg-gray-50 font-semibold pr-1 text-red-500`} style={{ height: '16px' }}>
         {formatToNaira(row.totalCr)}
       </td>
     );
@@ -376,7 +376,7 @@ const VoucherTable = ({
         {/* UPDATED: Reduced header heights */}
         <thead className="sticky top-0 bg-violet-200 z-10">
           <tr style={{ height: '20px' }}>
-            <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.sno, height: '20px' }}>S.No</th>
+            <th className="border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.sno, height: '20px' }}>S.No</th>
             <th className="p-0 border border-slate-400 text-[12px] font-semibold" style={{ width: columnWidths.ledger, height: '20px' }}>Ledger</th>
             {divisionType === 'single' ? (
               <>

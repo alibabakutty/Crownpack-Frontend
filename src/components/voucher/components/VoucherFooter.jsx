@@ -58,7 +58,7 @@ const VoucherFooter = ({
             <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
               {formatToNaira(grandTotals.grandTotalDr)}
             </td>
-            <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
+            <td className="p-1 border border-slate-400 text-right font-bold text-red-500" style={{ width: columnWidths.total }}>
               {formatToNaira(grandTotals.grandTotalCr)}
             </td>
             <td className="w-[28px] border border-slate-400 text-right font-bold"></td>
