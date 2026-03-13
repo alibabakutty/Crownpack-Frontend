@@ -141,7 +141,8 @@ const FetchVoucherUpdate = () => {
             item.main_group_name?.toLowerCase().includes(lowerTerm) ||
             String(item.totalDr).includes(lowerTerm) ||
             String(item.totalCr).includes(lowerTerm) ||
-            String(item.netAmt).includes(lowerTerm)
+            String(item.netDr).includes(lowerTerm) ||
+            String(item.netCr).includes(lowerTerm)
         );
     }, []);
 
@@ -281,42 +282,37 @@ const FetchVoucherUpdate = () => {
                 {/* RIGHT PANEL */}
                 <div className="w-full flex flex-col items-center">
 
-                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex items-center justify-between py-2">
-
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-1 px-3 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs ml-1"
-                        >
-                            <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 grid grid-cols-3 items-center py-1.5 px-2">
+                        {/* Column 1: Left */}
+                        <div className="flex justify-start">
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-1 px-3 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                                />
-                            </svg>
-                            Back
-                        </button>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Back
+                            </button>
+                        </div>
 
+                        {/* Column 2: Center */}
+                        <div className="flex justify-center">
+                            <input
+                                ref={searchInputRef}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                placeholder="Search..."
+                                className="w-full max-w-[550px] h-6 text-sm border border-gray-400 pl-2 rounded"
+                            />
+                        </div>
 
-                        <input
-                            ref={searchInputRef}
-                            value={searchTerm}
-                            onChange={e =>
-                                setSearchTerm(e.target.value)
-                            }
-                            placeholder=""
-                            className="w-[550px] h-5 text-sm border pl-1"
-                        />
-
-                        <p className="text-[13px] font-bold mr-1 underline">
-                            Voucher Transaction Reports - Update
-                        </p>
+                        {/* Column 3: Right */}
+                        <div className="flex justify-end">
+                            <p className="text-[13px] font-bold underline">
+                                Voucher Transaction Reports - Update
+                            </p>
+                        </div>
                     </div>
 
                     <div className="w-[1360px] border border-gray-600 bg-amber-50">
@@ -337,7 +333,7 @@ const FetchVoucherUpdate = () => {
                         </div>
 
                         <div
-                            className="h-[83vh] overflow-y-auto"
+                            className="h-[83.5vh] overflow-y-auto"
                             ref={listRef}
                         >
                             <ul>
