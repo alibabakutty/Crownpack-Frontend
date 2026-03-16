@@ -1,6 +1,6 @@
 import { formatToNaira } from "../utils/voucherUtils";
 
-const VoucherFooter = ({
+const VoucherFooter = ({ 
   mode,
   divisionType,
   numberOfDivisions,
