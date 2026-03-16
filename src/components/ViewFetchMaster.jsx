@@ -269,11 +269,10 @@ const ViewFetchMaster = () => {
         <button
           onClick={toggleConsolidationStatus}
           disabled={loading}
-          className={`ml-4 px-3 py-1 text-sm rounded ${
-            consolidationStatus === 'active' 
-              ? 'bg-green-500 text-white' 
+          className={`ml-4 px-3 py-1 text-sm rounded ${consolidationStatus === 'active'
+              ? 'bg-green-500 text-white'
               : 'bg-gray-300 text-gray-700'
-          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {consolidationStatus === 'active' ? 'Consolidated View' : 'Normal View'}
         </button>
@@ -391,9 +390,8 @@ const ViewFetchMaster = () => {
     return (
       <li
         key={item.id || item.item_code || index}
-        className={`border-b border-gray-300 px-1.5 py-1 transition-colors cursor-pointer ${
-          isSelected ? 'bg-yellow-100 border-yellow-300' : 'hover:bg-blue-50'
-        }`}
+        className={`border-b border-gray-300 px-1.5 py-1 transition-colors cursor-pointer ${isSelected ? 'bg-green-100 border-green-300' : 'hover:bg-blue-50'
+          }`}
         onClick={() => handleItemClick(item, index)}
       >
         {getItemContent()}
@@ -405,7 +403,7 @@ const ViewFetchMaster = () => {
   const renderContent = () => {
     if (loading && !hasFetched) {
       return (
-        <div className="h-[70vh] flex items-center justify-center">
+        <div className="h-[80vh] flex items-center justify-center">
           <div className="text-gray-500">Loading {currentModule?.title.toLowerCase()}...</div>
         </div>
       );
@@ -413,7 +411,7 @@ const ViewFetchMaster = () => {
 
     if (error) {
       return (
-        <div className="h-[70vh] flex items-center justify-center">
+        <div className="h-[80vh] flex items-center justify-center">
           <div className="text-red-600 text-center">
             <p>Error: {error}</p>
             <button
@@ -429,14 +427,14 @@ const ViewFetchMaster = () => {
 
     if (!currentModule) {
       return (
-        <div className="h-[70vh] flex items-center justify-center">
+        <div className="h-[80vh] flex items-center justify-center">
           <div className="text-red-600">Invalid module type</div>
         </div>
       );
     }
 
     return (
-      <div className="h-[78vh] overflow-y-auto" ref={listRef}>
+      <div className="h-[88vh] overflow-y-auto" ref={listRef}>
         <div>
           {filteredData.length === 0 ? (
             <div className="text-center py-8 text-gray-500 text-sm">
@@ -453,63 +451,73 @@ const ViewFetchMaster = () => {
   };
 
   return (
-    <div className="flex font-amasis">
-      <div className="w-full h-screen flex">
-        <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
+    <div className="flex font-amasis ">
+      <div className="w-full h-screen flex ">
+        {/* <div className="w-[30%] bg-linear-to-t to-cyan-400 from-[#ccc]">
           <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg backdrop-blur-sm"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              <span className="text-sm font-medium">Back</span>
-            </button>
+            
             {renderConsolidationToggle()}
           </div>
-        </div>
-        <div className="w-[70%] bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center">
-          <div className="w-[955px] h-16 flex flex-col justify-center items-center border border-black bg-yellow-50 border-b-0">
-            <p className="text-[12px] font-medium underline underline-offset-4 decoration-gray-400 text-gray-700">
-              {formatType(type)} Display
-            </p>
-            <input
+        </div> */}
+        <div className="w-full bg-linear-to-t to-cyan-400 from-[#ccc] flex justify-center flex-col items-center ">
+          <div className="w-full h-8 grid grid-cols-3 items-center border border-black bg-yellow-50 border-b-0">
+
+            <div className='flex justify-start'>
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-1 px-2 py-0.5 bg-green-800 text-white rounded hover:bg-green-700 text-xs ml-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span className="text-xs font-medium">Back</span>
+              </button>
+            </div>
+
+            <div className='flex justify-center'>
+              <input
               type="text"
               placeholder={currentModule?.searchPlaceholder || 'Search...'}
               value={searchTerm}
               ref={searchInputRef}
               onChange={handleSearchChange}
-              className="w-[550px] ml-2 mt-2 h-5 capitalize font-medium pl-1 text-sm focus:bg-yellow-200 focus:border focus:border-blue-500 focus:outline-0 relative z-10"
+              className="w-[550px] ml-2 h-5 capitalize font-medium pl-1 text-sm focus:bg-yellow-200 focus:border focus:border-blue-500 focus:outline-0 relative z-10"
               autoComplete="off"
             />
+            </div>
+
+            <div className='flex justify-end mr-1'>
+              <p className="text-[12px] font-semibold underline underline-offset-4 decoration-gray-400 text-gray-700">
+                {formatType(type)} Display
+              </p>
+            </div>
           </div>
-          <div className="w-[955px] h-[89vh] border border-gray-600 bg-amber-50">
+          <div className="w-full h-screen border border-gray-600 bg-amber-50">
             <h2 className="px-1 py-0.3 bg-green-800 text-white text-center text-[12px] pl-3">
               List of {typeNames[type] || 'Items'}
             </h2>
-            <div className="border border-b-slate-400 flex justify-between px-1 py-0.3 text-[12px] font-semibold">
+            <div className="border border-b-slate-400 flex px-1 py-0.3 text-[12px] font-semibold">
               <div>Code</div>
-              <div className={` ${type === 'ledger' ? '-ml-60' : '-ml-44'}`}>Name</div>
+              <div className={` ${type === 'ledger' ? 'ml-48' : 'ml-44'}`}>Name</div>
               {type !== 'division' && (
-                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Tally Report</div>
+                <div className={` ${type === 'ledger' ? 'ml-64' : 'ml-[233px]'}`}>Tally Report</div>
               )}
               {type !== 'ledger' && (
-                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Sub Report</div>
+                <div className={` ${type === 'ledger' ? '' : 'ml-32'}`}>Sub Report</div>
               )}
               {type !== 'division' && (
-                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Debit/Credit</div>
+                <div className={` ${type === 'ledger' ? 'ml-28' : 'ml-36'}`}>Debit/Credit</div>
               )}
               {type !== 'division' && (
-                <div className={` ${type === 'ledger' ? '-mr-56' : '-mr-48'}`}>Trial Balance</div>
+                <div className={` ${type === 'ledger' ? 'ml-36' : 'ml-[110px]'}`}>Trial Balance</div>
               )}
-              <div className={`${type === 'ledger' ? '-mr-60' : 'mr-6'}`}>Status</div>
-              {type === 'ledger' && <div>Link Status</div>}
+              <div className={`${type === 'ledger' ? 'ml-32' : 'ml-[126px]'}`}>Status</div>
+              {type === 'ledger' && <div className='ml-24'>Link Status</div>}
             </div>
             {renderContent()}
           </div>

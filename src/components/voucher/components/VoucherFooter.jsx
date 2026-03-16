@@ -1,5 +1,4 @@
-import React from 'react';
-import { formatToNaira } from '../utils/voucherUtils';
+import { formatToNaira } from "../utils/voucherUtils";
 
 const VoucherFooter = ({
   mode,
@@ -9,63 +8,145 @@ const VoucherFooter = ({
   divisionTotals,
   isSubmitting,
   onSubmit,
-  columnWidths = { total: '120px' }
+  createdBy,
+  setCreatedBy,
+  verifiedBy,
+  setVerifiedBy,
+  approvedBy,
+  setApprovedBy
 }) => {
-  const divisionWidths = [140, 140, 140, 140, 140, 140];
+
+  const DIV_WIDTH = "140px";
+  const INDEX_WIDTH = "50px";
+  const LABEL_WIDTH = "220px";
+  const SEP_WIDTH = "10px";
+
+  // EXTRA WIDTH FOR TOTALS
+  const TOTAL_WIDTH = "260px";
+
+  const totalColumns =
+    1 + 1 + (divisionType === "multiple" ? numberOfDivisions : 0) + 1 + 2;
 
   return (
-    <div className="sticky bottom-0 bg-white border-t border-slate-400 shadow-sm">
-      <table className="w-full border border-slate-400 table-fixed">
-        <tfoot>
-          <tr className="text-[12px] bg-yellow-100">
-            <td className="p-1 border border-slate-400">
-              {(mode === "create" || mode === "update") && (
-                <button
-                  onClick={onSubmit}
-                  disabled={isSubmitting}
-                  className="px-3 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 text-xs disabled:bg-gray-400"
-                >
-                  {isSubmitting ? 'Saving...' : mode === 'create' ? 'Submit' : 'Update'}
-                </button>
-              )}
-            </td>
+    <tfoot>
+
+      {/* GRAND TOTAL ROW */}
+      <tr className="text-[11px] bg-yellow-100 leading-none">
+
+        {/* Index */}
+        <td
+          style={{ width: INDEX_WIDTH }}
+          className="border border-slate-400 p-[2px]"
+        />
+
+        {/* Label */}
+        <td
+          style={{ width: LABEL_WIDTH }}
+          className="border border-slate-400 font-bold px-1 py-[2px]"
+        >
+          Grand Total
+        </td>
+
+        {/* Division Totals */}
+        {divisionType === "multiple" &&
+          Array.from({ length: numberOfDivisions }).map((_, i) => (
             <td
-              colSpan={divisionType === 'single' ? 3 : 2 + (numberOfDivisions * 2)}
-              className="p-1 border border-slate-400 text-right font-bold"
+              key={i}
+              style={{
+                width: DIV_WIDTH,
+                minWidth: DIV_WIDTH
+              }}
+              className="border border-slate-400 text-right font-bold px-1 py-[2px]"
             >
-              Grand Total:
+              {formatToNaira(divisionTotals[`d${i + 1}`])}
             </td>
+          ))}
 
-            {divisionType === "multiple" && (
-              <>
-                {Array.from({ length: numberOfDivisions }).map((_, i) => (
-                  <React.Fragment key={i}>
-                    <td
-                      style={{ width: `${divisionWidths[i]}px` }}
-                      className="px-2 py-1 border border-slate-400 text-right font-bold"
-                    >
-                      {formatToNaira(divisionTotals[`d${i + 1}`])}
-                    </td>
-                    {i !== numberOfDivisions - 1 && (
-                      <td style={{ width: "15px" }} className="border border-slate-400"></td>
-                    )}
-                  </React.Fragment>
-                ))}
-              </>
-            )}
+        {/* Separator */}
+        <td
+          style={{ width: SEP_WIDTH }}
+          className="border border-slate-400"
+        />
 
-            <td className="w-[10px] border border-slate-400 text-right font-bold"></td>
-            <td className="p-1 border border-slate-400 text-right font-bold" style={{ width: columnWidths.total }}>
-              {formatToNaira(grandTotals.grandTotalDr)}
-            </td>
-            <td className="p-1 border border-slate-400 text-right font-bold text-red-500" style={{ width: columnWidths.total }}>
-              {formatToNaira(grandTotals.grandTotalCr)}
-            </td>
-            <td className="w-[28px] border border-slate-400 text-right font-bold"></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+        {/* TOTAL DR */}
+        <td
+          style={{
+            width: TOTAL_WIDTH,
+            minWidth: TOTAL_WIDTH
+          }}
+          className="border border-slate-400 text-right font-bold px-1 py-[2px] bg-yellow-200"
+        >
+          {formatToNaira(grandTotals.grandTotalDr)}
+        </td>
+
+        {/* TOTAL CR */}
+        <td
+          style={{
+            width: TOTAL_WIDTH,
+            minWidth: TOTAL_WIDTH
+          }}
+          className="border border-slate-400 text-right font-bold text-red-500 px-1 py-[2px] bg-yellow-200"
+        >
+          {formatToNaira(grandTotals.grandTotalCr)}
+        </td>
+      </tr>
+
+      {/* APPROVAL ROW */}
+      <tr className="text-[10px]">
+
+        <td colSpan={totalColumns} className="border border-slate-400 p-0">
+
+          <div className="flex items-center w-full h-8">
+
+            {/* Created */}
+            <div
+              className="flex items-center gap-1 px-2 border-r border-slate-300 h-full"
+              style={{ width: `calc(${INDEX_WIDTH} + ${LABEL_WIDTH})` }}
+            >
+              <span className="font-bold">Created:</span>
+              <input value={createdBy} onChange={(e) => setCreatedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+            </div>
+
+            {/* Verified */}
+            <div
+              className="flex items-center gap-1 px-2 border-r border-slate-300 h-full"
+              style={{ width: `calc(${DIV_WIDTH} * 2)` }}
+            >
+              <span className="font-bold">Verified:</span>
+              <input value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+            </div>
+
+            {/* Approved */}
+            <div
+              className="flex items-center gap-1 px-2 border-r border-slate-300 h-full"
+              style={{ width: `calc(${DIV_WIDTH} * 2)` }}
+            >
+              <span className="font-bold">Approved:</span>
+              <input value={approvedBy} onChange={(e) => setApprovedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+            </div>
+
+            {/* Submit */}
+            <div className="flex-1 flex items-center justify-center bg-gray-50 h-full px-2">
+              <button
+                onClick={onSubmit}
+                disabled={isSubmitting}
+                className="w-full h-6 bg-green-600 text-white rounded text-[10px] font-bold hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {isSubmitting
+                  ? "Saving..."
+                  : mode === "create"
+                    ? "SUBMIT"
+                    : "UPDATE"}
+              </button>
+            </div>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    </tfoot>
   );
 };
 

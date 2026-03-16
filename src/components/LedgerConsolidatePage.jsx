@@ -3,6 +3,7 @@ import Select from "react-select";
 import api from "../services/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 const LedgerConsolidatePage = () => {
 
@@ -23,6 +24,7 @@ const LedgerConsolidatePage = () => {
 
   const [nextRowId, setNextRowId] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const statusOptions = [
     { value: "active", label: "Active" },
@@ -318,7 +320,9 @@ const LedgerConsolidatePage = () => {
     menu: (p) => ({ ...p, zIndex: 20, fontSize: "12px" })
   };
 
-
+const handleBack = () => {
+    navigate(-1);
+  };
 
   return (
 
@@ -327,6 +331,23 @@ const LedgerConsolidatePage = () => {
       <ToastContainer />
 
       <div className="w-full h-screen border border-gray-600 bg-amber-50">
+
+        <div className="absolute flex items-center gap-2">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors bg-green-800 hover:bg-green-700 rounded-lg backdrop-blur-sm mt-1 ml-1 cursor-pointer p-1"
+            title="Go back (Esc)"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+          </button>
+        </div>
 
         <h2 className="bg-green-800 text-white text-center text-[13px]">
           Ledger Consolidation

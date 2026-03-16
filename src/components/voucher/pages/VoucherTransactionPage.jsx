@@ -22,6 +22,17 @@ const VoucherTransactionPage = () => {
 
   const {
     voucherNumber,
+    month,
+    setMonth,
+    year,
+    setYear,
+    createdBy,
+    setCreatedBy,
+    verifiedBy,
+    setVerifiedBy,
+    approvedBy,
+    setApprovedBy,
+
     rows,
     setRows,
     voucherList,
@@ -59,7 +70,7 @@ const VoucherTransactionPage = () => {
   // SINGLE useEffect for division type management
   useEffect(() => {
     console.log("🟢 Division type useEffect - Mode:", mode, "fetchedDivisionType:", fetchedDivisionType);
-    
+
     if (mode === 'create') {
       // For create mode, use path
       if (path.includes('/voucher-transaction-single')) {
@@ -121,14 +132,19 @@ const VoucherTransactionPage = () => {
     const voucherData = {
       voucherNumber,
       dateTime: currentDateTime,
+      month,
+      year,
       divisionType,
+      createdBy,
+      verifiedBy,
+      approvedBy,
       transactions: rows
     };
 
     try {
       setIsSubmitting(true);
       const data = await voucherService.createVoucher(voucherData);
-      
+
       if (data.success) {
         alert("✅ Voucher saved successfully");
         await resetForm();
@@ -165,14 +181,19 @@ const VoucherTransactionPage = () => {
     const voucherData = {
       voucherNumber,
       dateTime: currentDateTime,
+      month,
+      year,
       divisionType,
+      createdBy,
+      verifiedBy,
+      approvedBy,
       transactions: rows
     };
 
     try {
       setIsSubmitting(true);
       const data = await voucherService.updateVoucher(voucherNumber, voucherData);
-      
+
       if (data.success) {
         alert("✅ Voucher updated successfully");
       } else {
@@ -191,10 +212,10 @@ const VoucherTransactionPage = () => {
   const handleLedgerSelect = (rowId, option) => handleLedgerChange(rowId, option);
   const handleFieldChange = (rowId, field, value) => handleInputChange(rowId, field, value);
 
-  const pageTitle = mode !== 'create' 
-    ? (mode === 'update' 
-        ? ` - View/Edit Voucher ${voucherNumberParam}` 
-        : ` - All Transactions containing Ledger: ${searchLedger}`)
+  const pageTitle = mode !== 'create'
+    ? (mode === 'update'
+      ? ` - View/Edit Voucher ${voucherNumberParam}`
+      : ` - All Transactions containing Ledger: ${searchLedger}`)
     : '';
 
   const columnWidths = {
@@ -213,7 +234,7 @@ const VoucherTransactionPage = () => {
   return (
     <div className="flex font-amasis">
       <div className="w-full h-screen border border-gray-600 bg-amber-50 flex flex-col">
-        <VoucherHeader 
+        <VoucherHeader
           mode={mode}
           title={`Voucher Transaction${pageTitle}`}
         />
@@ -223,6 +244,10 @@ const VoucherTransactionPage = () => {
           divisionType={divisionType}
           currentDateTime={currentDateTime}
           mode={mode}
+          month={month}
+          year={year}
+          onMonthChange={setMonth}
+          onYearChange={setYear}
           showNavigation={mode === "ledger" && voucherList.length > 1}
           navigationProps={{
             currentIndex: currentVoucherIndex,
@@ -263,6 +288,12 @@ const VoucherTransactionPage = () => {
           isSubmitting={isSubmitting}
           onSubmit={mode === 'create' ? handleCreateVoucher : handleUpdateVoucher}
           columnWidths={columnWidths}
+          createdBy={createdBy}
+          setCreatedBy={setCreatedBy}
+          verifiedBy={verifiedBy}
+          setVerifiedBy={setVerifiedBy}
+          approvedBy={approvedBy}
+          setApprovedBy={setApprovedBy}
         />
       </div>
     </div>

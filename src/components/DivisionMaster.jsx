@@ -19,7 +19,7 @@ const DivisionMaster = () => {
             .then(response => {
                 // normalize response
                 const data = Array.isArray(response) ? response : response.data || [];
-                
+
                 if (data.length > 0) {
                     const filled = data.map(d => ({
                         id: d.id,

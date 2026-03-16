@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { formatToNaira } from '../voucher/utils/voucherUtils';
@@ -127,6 +127,13 @@ const FetchVoucherDivision = () => {
         }
     }, [selectedIndex]);
 
+    const totals = useMemo(() => {
+        return filteredData.reduce((acc, item) => ({
+            dr: acc.dr + (item.Vch_Amt_Dr || 0),
+            cr: acc.cr + (item.Vch_Amt_Cr || 0),
+        }), { dr: 0, cr: 0 });
+    }, [filteredData]);
+
     // KEYBOARD NAVIGATION
     useEffect(() => {
         const handleKeyDown = e => {
@@ -179,31 +186,31 @@ const FetchVoucherDivision = () => {
                     }`}
                 onClick={() => { }}
             >
-                <div className="flex text-[12px]">
-                    <div className='w-[13%] border border-right border-gray-500 pl-0.5 truncate'>{item.vch_no}</div>
+                <div className="flex text-[12px] border-l border-b border-gray-400">
+                    <div className='w-[13%] border-r border-gray-400 pl-0.5 truncate'>{item.vch_no}</div>
 
-                    <div className='w-[8%] text-center border border-right border-gray-500 truncate text-center pl-0.5'>
+                    <div className='w-[6%] text-center border-r border-gray-400 truncate text-center pl-0.5'>
                         {item.vch_date?.split("-").reverse().join("-")}
                     </div>
 
-                    <div className='w-[25%] border border-right border-gray-500 capitalize pl-0.5 truncate'>
+                    <div className='w-[25%] border-r border-gray-400 capitalize pl-0.5 truncate'>
                         {item.ledger_name || ''}
                     </div>
 
-                    <div className='w-[25%] border border-right border-gray-500 capitalize pl-0.5 truncate text-center'>
+                    <div className='w-[15%] border-r border-gray-400 capitalize pl-0.5 truncate'>
                         {item.main_group_name || ''}
                     </div>
 
-                    <div className='w-[10%] border border-right border-gray-500 text-center pr-0.5 capitalize'>
+                    <div className='w-[7%] border-r border-gray-400 text-center pr-0.5 capitalize'>
                         {item.division_type}
                     </div>
-                    <div className='w-[7%] border border-right border-gray-500 text-center pr-0.5 uppercase'>
+                    <div className='w-[5%] border-r border-gray-400 text-center pr-0.5 uppercase'>
                         {item.division}
                     </div>
-                    <div className='w-[12%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[15%] border-r border-gray-400 text-right pr-0.5'>
                         {item.Vch_Amt_Dr ? formatToNaira(item.Vch_Amt_Dr) : ""}
                     </div>
-                    <div className='w-[12%] border border-right border-gray-500 text-right pr-0.5'>
+                    <div className='w-[15%] border-r border-gray-400 text-right pr-0.5 text-red-500'>
                         {item.Vch_Amt_Cr ? formatToNaira(item.Vch_Amt_Cr) : ""}
                     </div>
 
@@ -228,43 +235,52 @@ const FetchVoucherDivision = () => {
 
     return (
         <div className="flex font-amasis relative">
-            <button
-                onClick={() => navigate(-1)}
-                className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
-            >
-                <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                </svg>
-                Back
-            </button>
+
             <div className="w-full h-screen flex">
                 {/* RIGHT PANEL */}
                 <div className="w-full flex flex-col items-center">
 
-                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 flex flex-col items-center py-2">
-                        <p className="text-[13px] underline font-semibold">
-                            Trial Balance Reports - Division
-                        </p>
+                    <div className="w-[1360px] border border-black bg-yellow-50 border-b-0 grid grid-cols-3 items-center py-1.5">
+                        <div className='flex justify-start'>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-green-800 text-white rounded hover:bg-green-700 text-xs"
+                            >
+                                <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                    />
+                                </svg>
+                                Back
+                            </button>
+                        </div>
 
-                        <input
-                            ref={searchInputRef}
-                            value={searchTerm}
-                            onChange={e =>
-                                setSearchTerm(e.target.value)
-                            }
-                            placeholder="Search voucher..."
-                            className="w-[550px] mt-2 h-5 text-sm border pl-1"
-                        />
+
+                        <div className='justify-center'>
+                            <input
+                                ref={searchInputRef}
+                                value={searchTerm}
+                                onChange={e =>
+                                    setSearchTerm(e.target.value)
+                                }
+                                placeholder="Search voucher..."
+                                className="w-[550px] h-5 text-sm border pl-1"
+                            />
+                        </div>
+
+                        <div className='flex justify-end pr-1'>
+                            <p className="text-[13px] underline font-semibold">
+                                Trial Balance Reports - Division
+                            </p>
+                        </div>
                     </div>
 
                     <div className="w-[1360px] border border-gray-600 bg-amber-50 overflow-x-auto">
@@ -274,19 +290,20 @@ const FetchVoucherDivision = () => {
                                 List of Trial Balance Reports - Division
                             </h2>
 
-                            <div className="flex text-[12px] font-semibold border-b">
-                                <div className='w-[20%] text-center border border-gray-500'>VCH-No.</div>
-                                <div className='w-[9%] text-center border border-gray-500'>VCH-Date</div>
-                                <div className='w-[30%] text-center border border-gray-500'>Ledger</div>
-                                <div className='w-[10%] text-center border border-gray-500'>Entry-Type</div>
-                                <div className='w-[7%] text-center border border-gray-500'>Division</div>
+                            <div className="flex text-[12px] font-semibold border-b border-gray-400">
+                                <div className='w-[12.9%] text-center border-r border-gray-400'>VCH-No.</div>
+                                <div className='w-[6%] text-center border-r border-gray-400'>VCH-Date</div>
+                                <div className='w-[24.65%] text-center border-r border-gray-400'>Ledger</div>
+                                <div className='w-[14.9%] text-center border-r border-gray-400'>Main Group</div>
+                                <div className='w-[7%] text-center border-r border-gray-400'>Entry-Type</div>
+                                <div className='w-[4.85%] text-center border-r border-gray-400'>Division</div>
 
-                                <div className='w-[12%] text-center border border-gray-500'>Dr</div>
-                                <div className='w-[12%] text-center border border-gray-500'>Cr</div>
+                                <div className='w-[14.9%] text-center border-r border-gray-400'>Dr</div>
+                                <div className='w-[14.8%] text-center border-r border-gray-400'>Cr</div>
                             </div>
 
                             <div
-                                className="h-[82vh]"
+                                className="h-[83vh]"
                                 ref={listRef}
                             >
                                 <ul>
@@ -295,6 +312,17 @@ const FetchVoucherDivision = () => {
                                     )}
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="flex text-[11px] font-bold bg-gray-300 border-b border-gray-500 py-1 items-center w-full">
+
+                        <div className="text-right pr-6 uppercase tracking-wider text-green-900 ml-2">Gross Total</div>
+                        <div className={`w-[10%] border-r border-gray-400 text-right pr-1 ml-224`}>
+                            {formatToNaira(totals.dr)}
+                        </div>
+                        <div className={`w-[10%] text-right pr-1 text-red-500 ml-16`}>
+                            {formatToNaira(totals.cr)}
                         </div>
                     </div>
                 </div>

@@ -5,13 +5,20 @@ import {
   generateClientSideVoucherNumber
 } from "../utils/voucherUtils";
 
+const months = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
 export const useVoucherData = (
   mode,
   divisionType,
   voucherNumberParam,
   ledger
 ) => {
+
   const [voucherNumber, setVoucherNumber] = useState("");
+  const [month, setMonth] = useState(months[new Date().getMonth()]);
+  const [year, setYear] = useState(String(new Date().getFullYear()));
   const [rows, setRows] = useState([]);
   const [nextRowId, setNextRowId] = useState(1);
   const [voucherList, setVoucherList] = useState([]);
@@ -19,6 +26,9 @@ export const useVoucherData = (
   const [searchLedger, setSearchLedger] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchedDivisionType, setFetchedDivisionType] = useState(null);
+  const [createdBy, setCreatedBy] = useState("");
+  const [verifiedBy, setVerifiedBy] = useState("");
+  const [approvedBy, setApprovedBy] = useState("");
 
   /* ------------------------------------------------------ */
   /* GENERATE NEXT VOUCHER NUMBER (CREATE MODE) */
@@ -54,6 +64,11 @@ export const useVoucherData = (
 
         if (data.length > 0) {
           setVoucherNumber(data[0].voucher_number);
+          setCreatedBy(data[0].created_by || "");
+          setVerifiedBy(data[0].verified_by || "");
+          setApprovedBy(data[0].approved_by || "");
+          if (data[0].voucher_month) setMonth(data[0].voucher_month);
+          if (data[0].voucher_year) setYear(data[0].voucher_year);
 
           const isMultiple = data.some(
             item =>
@@ -317,12 +332,25 @@ export const useVoucherData = (
     await updateVoucherNumber();
     initializeRows(divisionType, 5);
     setFetchedDivisionType(null);
+    setCreatedBy("");
+    setVerifiedBy("");
+    setApprovedBy("");
   }, [divisionType, updateVoucherNumber, initializeRows]);
 
   /* ------------------------------------------------------ */
 
   return {
     voucherNumber,
+    month,
+    setMonth,
+    year,
+    setYear,
+    createdBy,
+    setCreatedBy,
+    verifiedBy,
+    setVerifiedBy,
+    approvedBy,
+    setApprovedBy,
     rows,
     setRows,
     nextRowId,
