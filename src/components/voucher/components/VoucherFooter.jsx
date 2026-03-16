@@ -92,7 +92,7 @@ const VoucherFooter = ({
       </tr>
 
       {/* APPROVAL ROW */}
-      <tr className="text-[10px]">
+      <tr className="text-[11px]">
 
         <td colSpan={totalColumns} className="border border-slate-400 p-0">
 
@@ -104,7 +104,13 @@ const VoucherFooter = ({
               style={{ width: `calc(${INDEX_WIDTH} + ${LABEL_WIDTH})` }}
             >
               <span className="font-bold">Created:</span>
-              <input value={createdBy} onChange={(e) => setCreatedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+              <input value={createdBy} onChange={(e) => setCreatedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[11px] h-4 capitalize" />
+            </div>
+
+            <div
+              className="flex items-center gap-1 px-1 border-r border-slate-300 h-full w-[190px]"
+              // style={{ width: `calc(${INDEX_WIDTH} + ${LABEL_WIDTH})` }}
+            >
             </div>
 
             {/* Verified */}
@@ -113,7 +119,13 @@ const VoucherFooter = ({
               style={{ width: `calc(${DIV_WIDTH} * 2)` }}
             >
               <span className="font-bold">Verified:</span>
-              <input value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+              <input value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[11px] h-4 capitalize" />
+            </div>
+
+            <div
+              className="flex items-center gap-1 px-1 border-r border-slate-300 h-full w-[190px]"
+              // style={{ width: `calc(${INDEX_WIDTH} + ${LABEL_WIDTH})` }}
+            >
             </div>
 
             {/* Approved */}
@@ -122,7 +134,7 @@ const VoucherFooter = ({
               style={{ width: `calc(${DIV_WIDTH} * 2)` }}
             >
               <span className="font-bold">Approved:</span>
-              <input value={approvedBy} onChange={(e) => setApprovedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[10px] h-4" />
+              <input value={approvedBy} onChange={(e) => setApprovedBy(e.target.value)} className="flex-1 border-b border-gray-300 outline-none bg-transparent text-[11px] h-4 capitalize" />
             </div>
 
             {/* Submit */}
