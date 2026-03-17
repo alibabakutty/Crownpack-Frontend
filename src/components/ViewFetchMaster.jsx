@@ -116,7 +116,7 @@ const ViewFetchMaster = () => {
         case 'Enter':
           e.preventDefault();
           if (filteredData[selectedIndex]) {
-            handleItemClick(filteredData[selectedIndex], selectedIndex);
+            // handleItemClick(filteredData[selectedIndex], selectedIndex);
           }
           break;
 
@@ -234,25 +234,25 @@ const ViewFetchMaster = () => {
   };
 
   // Handle item click based on type
-  const handleItemClick = (item, index) => {
-    setSelectedIndex(index);
+  // const handleItemClick = (item, index) => {
+  //   setSelectedIndex(index);
 
-    switch (type) {
-      case 'main-group':
-        handleMasterGroupClick(item);
-        break;
-      case 'sub-group':
-        handleSubGroupClick(item);
-        break;
-      case 'ledger':
-        handleLedgerClick(item);
-        break;
-      case 'division':
-        handleDivisionClick(item);
-      default:
-        break;
-    }
-  };
+  //   switch (type) {
+  //     case 'main-group':
+  //       handleMasterGroupClick(item);
+  //       break;
+  //     case 'sub-group':
+  //       handleSubGroupClick(item);
+  //       break;
+  //     case 'ledger':
+  //       handleLedgerClick(item);
+  //       break;
+  //     case 'division':
+  //       handleDivisionClick(item);
+  //     default:
+  //       break;
+  //   }
+  // };
 
   // Toggle consolidation status
   const toggleConsolidationStatus = () => {
@@ -392,7 +392,9 @@ const ViewFetchMaster = () => {
         key={item.id || item.item_code || index}
         className={`border-b border-gray-300 px-1.5 py-1 transition-colors cursor-pointer ${isSelected ? 'bg-green-100 border-green-300' : 'hover:bg-blue-50'
           }`}
-        onClick={() => handleItemClick(item, index)}
+        onClick={() => {}
+          // handleItemClick(item, index)
+        }
       >
         {getItemContent()}
       </li>
